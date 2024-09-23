@@ -6,7 +6,7 @@ This project involves fetching data about near-Earth objects (NEOs) from NASA's 
 
 ## Project Structure
 ```graphql
-my_data_engineering_project/
+NASA-Data-Ingestion-Pipeline/
 │
 ├── dags/                           # Airflow DAGs
 │   └── nasa_neo_data_fetcher.py   # Main Airflow DAG for fetching data
@@ -31,3 +31,69 @@ my_data_engineering_project/
 │
 └── docker-compose.yml              # Docker Compose configuration
 ```
+
+## Technologies Used
+
+- **Apache Airflow**: For orchestrating the data pipeline.
+- **Apache Kafka**: For streaming data between components.
+- **Apache Spark**: For processing the streamed data.
+- **Cassandra**: For storing processed data.
+- **Python**: The primary programming language used.
+
+## Setup Instructions
+
+### Prerequisites
+
+- Docker and Docker Compose installed on your machine.
+- A valid NASA API key to access the NEO API.
+
+### Running the Project
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/david11133/NASA-Data-Ingestion-Pipeline
+   cd NASA-Data-Ingestion-Pipeline
+   ```
+
+2. **Start Services**:
+   Use Docker Compose to start all required services (Airflow, Kafka, Zookeeper, and Cassandra).
+   ```bash
+   docker-compose up
+   ```
+
+3. **Access Airflow**:
+   - Open your web browser and go to `http://localhost:8080`.
+   - You can find your Airflow DAG named `nasa_neo_data_fetcher`.
+
+4. **Run the Airflow DAG**:
+   - Trigger the DAG to start fetching data from the NASA NEO API and stream it to Kafka.
+
+5. **Run the Kafka Consumer**:
+   - Open a new terminal and run the consumer script to process the streamed data.
+   ```bash
+   python kafka/consumer.py
+   ```
+
+### Kafka Producer Example
+
+You can test sending data to Kafka using the producer script.
+
+1. **Run the Producer**:
+   Open a new terminal and execute:
+   ```bash
+   python kafka/producer.py
+   ```
+
+## Next Steps
+
+1. Implement logic in the Kafka consumer to process data and store it in Cassandra.
+2. Set up appropriate CQL scripts to create the necessary tables in Cassandra.
+3. Explore additional features like error handling and monitoring.
+
+## License
+
+This project is licensed under the MIT License.
+
+## Contact
+
+For any questions or contributions, please reach out to [davidnady4yad@gmail.com].
