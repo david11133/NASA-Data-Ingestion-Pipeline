@@ -1,8 +1,11 @@
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime, timedelta
 import requests
 import json
 import uuid
 
-def get_data(api_key, start_date, end_date):
+def get_data(api_key, start_date, end_date, **kwargs):
     """
     Fetch data from NASA's NEO API for the given date range.
 
@@ -12,11 +15,11 @@ def get_data(api_key, start_date, end_date):
         end_date (str): The end date for data retrieval (YYYY-MM-DD).
 
     Returns:
-        list: A list of near-Earth objects if successful, None otherwise.
+        list: A list of near-Earth objects if successful, raises an error otherwise.
     """
     # Set up the API URL
     url = f"https://api.nasa.gov/neo/rest/v1/feed?start_date={start_date}&end_date={end_date}&api_key={api_key}"
-
+    
     # Fetch data from the NEO API
     response = requests.get(url)
 
@@ -25,8 +28,8 @@ def get_data(api_key, start_date, end_date):
         data = response.json()
         return data['near_earth_objects']
     else:
-        print(f"Error fetching data: {response.status_code}")
-        return None
+        raise ValueError(f"Error fetching data: {response.status_code}")
+
 
 def format_data(asteroids):
     """
@@ -62,6 +65,7 @@ def format_data(asteroids):
 
     return formatted_data
 
+
 def stream_data(formatted_data):
     """
     Print formatted asteroid data in JSON format.
@@ -71,6 +75,7 @@ def stream_data(formatted_data):
     """
     for asteroid in formatted_data:
         print(json.dumps(asteroid, indent=4))
+
 
 def main(api_key, start_date, end_date):
     """
@@ -85,14 +90,34 @@ def main(api_key, start_date, end_date):
 
     if asteroids_data:
         for date, asteroids in asteroids_data.items():
-            print(f"\nDate: {date}")
             formatted_data = format_data(asteroids)
             stream_data(formatted_data)
 
-# Main execution parameters
-if __name__ == "__main__":
-    API_KEY = "wSJjaC224VWXNgCnlzpWSpODlYNyfdeNzUMRRjBU"  # Replace with your actual API key
-    START_DATE = "2024-09-21"
-    END_DATE = "2024-09-21"
 
-    main(API_KEY, START_DATE, END_DATE)
+# Define the default arguments for the DAG
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'start_date': datetime(2024, 9, 21),
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+
+# Define the DAG
+with DAG('nasa_neo_data_fetcher',
+         default_args=default_args,
+         schedule_interval='@daily',  # Adjust as needed
+         catchup=False) as dag:
+
+    fetch_data = PythonOperator(
+        task_id='fetch_nasa_data',
+        python_callable=main,
+        op_kwargs={
+            'api_key': "wSJjaC224VWXNgCnlzpWSpODlYNyfdeNzUMRRjBU",  # Use environment variable in production
+            'start_date': "2024-09-21",
+            'end_date': "2024-09-21"
+        }
+    )
+
+    fetch_data
