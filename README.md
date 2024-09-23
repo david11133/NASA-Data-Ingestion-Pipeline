@@ -1,6 +1,8 @@
 # NASA NEO Data Engineering Project
 
-> **Note:** This project is currently under development. Features and functionalities are still being added, and the structure may change.
+<div style="background-color: #f9c2c2; padding: 10px; border: 1px solid #f00; border-radius: 5px;">
+    <strong>Note:</strong> This project is currently under development. Features and functionalities are still being added, and the structure may change.
+</div>
 
 ## Overview
 
