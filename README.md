@@ -16,6 +16,7 @@ NASA-Data-Ingestion-Pipeline/
 ├── kafka/                          # Kafka producer and consumer scripts
 │   ├── producer.py                 # Kafka producer script
 │   └── consumer.py                 # Kafka consumer script using Spark
+├── dbt/
 │
 ├── spark/                          # Spark streaming jobs
 │   └── streaming_job.py            # Spark streaming job for processing data
