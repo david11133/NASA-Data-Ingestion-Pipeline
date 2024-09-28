@@ -10,8 +10,13 @@ This project involves fetching data about near-Earth objects (NEOs) from NASA's 
 ```graphql
 NASA-Data-Ingestion-Pipeline/
 │
-├── dags/                           # Airflow DAGs
-│   └── nasa_neo_data_fetcher.py   # Main Airflow DAG for fetching data
+├── Airflow/
+|   ├── dags/                           # Airflow DAGs directory
+|   │   └── nasa_neo_data_fetcher.py   # Main Airflow DAG for fetching NASA data
+|   ├── .env                            # Environment variables for configuration
+|   ├── docker-compose.yaml             # Docker Compose configuration
+|   ├── Dockerfile                      # Dockerfile for building the Airflow image
+|   └── requirements.txt                # Python dependencies
 │
 ├── kafka/                          # Kafka producer and consumer scripts
 │   ├── producer.py                 # Kafka producer script
