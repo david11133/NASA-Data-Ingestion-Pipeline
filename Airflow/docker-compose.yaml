@@ -1,0 +1,28 @@
+version: '3'
+services:
+  airflow-webserver:
+    image: apache/airflow:2.5.0
+    restart: always
+    depends_on:
+      - airflow-scheduler
+    environment:
+      - LOAD_EX=n
+      - EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./plugins:/opt/airflow/plugins
+    ports:
+      - "8080:8080"
+
+  airflow-scheduler:
+    image: apache/airflow:2.5.0
+    restart: always
+    depends_on:
+      - airflow-webserver
+    environment:
+      - EXECUTOR=LocalExecutor
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./plugins:/opt/airflow/plugins
