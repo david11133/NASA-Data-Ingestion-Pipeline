@@ -20,9 +20,11 @@ NASA-Data-Ingestion-Pipeline/
 |
 ├── dbt/
 │
-├── kafka/                          # Kafka producer and consumer scripts
-│   ├── producer.py                 # Kafka producer script
-│   └── consumer.py                 # Kafka consumer script using Spark
+├── Kafka/
+│   ├── producer.py                # Kafka producer code
+│   ├── consumer.py                # Kafka consumer code (for testing)
+│   ├── requirements.txt           # Kafka dependencies
+│   └── .env                       # Environment variables for Kafka config
 |
 │
 ├── spark/                          # Spark streaming jobs
