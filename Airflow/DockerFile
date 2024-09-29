@@ -1,7 +1,9 @@
 FROM apache/airflow:2.5.0
 
-COPY requirements.txt /
-RUN pip install --no-cache-dir -r requirements.txt
+USER root
+# Install any additional system dependencies here if needed
 
-COPY dags/ /opt/airflow/dags/
-COPY plugins/ /opt/airflow/plugins/
+USER airflow
+# Install Python dependencies
+COPY requirements.txt /
+RUN pip install --no-cache-dir -r /requirements.txt

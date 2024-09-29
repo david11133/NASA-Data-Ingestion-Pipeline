@@ -1,28 +1,41 @@
 version: '3'
 services:
-  airflow-webserver:
-    image: apache/airflow:2.5.0
-    restart: always
-    depends_on:
-      - airflow-scheduler
+  postgres:
+    image: postgres:13
     environment:
-      - LOAD_EX=n
-      - EXECUTOR=LocalExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
-      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    ports:
+      - "5432:5432"
+
+  webserver:
+    image: apache/airflow:2.5.0
+    depends_on:
+      - postgres
+    environment:
+      - _PIP_ADDITIONAL_INDEX_URL=https://pypi.org/simple
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__WEBSERVER__RBAC=true
+      - AIRFLOW__API__AUTH_BACKEND=airflow.api.auth.backend.basic
+      - AIRFLOW_API_USER=airflow
+      - AIRFLOW_API_PASSWORD=airflow
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./plugins:/opt/airflow/plugins
+      - ./Airflow/dags:/usr/local/airflow/dags
+      - ./Airflow/.env:/usr/local/airflow/.env
     ports:
       - "8080:8080"
+    command: webserver
 
-  airflow-scheduler:
+  scheduler:
     image: apache/airflow:2.5.0
-    restart: always
     depends_on:
-      - airflow-webserver
+      - postgres
     environment:
-      - EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./plugins:/opt/airflow/plugins
+      - ./Airflow/dags:/usr/local/airflow/dags
+      - ./Airflow/.env:/usr/local/airflow/.env
+    command: scheduler
