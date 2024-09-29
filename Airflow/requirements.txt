@@ -1,2 +1,2 @@
-apache-airflow[postgres]==2.5.0
-requests==2.28.1
+apache-airflow-providers-http
+requests
