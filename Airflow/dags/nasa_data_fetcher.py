@@ -4,6 +4,19 @@ from airflow.operators.python_operator import PythonOperator
 import requests
 import json
 import os
+from kafka import KafkaProducer
+
+# Function to send data to Kafka
+def send_data_to_kafka(data):
+    producer = KafkaProducer(
+        bootstrap_servers=os.getenv("KAFKA_BROKER"),  # Load Kafka broker from env
+        value_serializer=lambda v: json.dumps(v).encode('utf-8')
+    )
+    
+    topic = os.getenv("KAFKA_TOPIC")  # Load topic from env
+    producer.send(topic, value=data)
+    producer.flush()
+    producer.close()
 
 # Function to fetch NASA NEO data
 def fetch_nasa_neo_data():
@@ -16,11 +29,10 @@ def fetch_nasa_neo_data():
     
     if response.status_code == 200:
         data = response.json()
-        important_data = []
         
         for date, asteroids in data['near_earth_objects'].items():
             for asteroid in asteroids:
-                important_data.append({
+                important_data = {
                     "Date": date,
                     "ID": asteroid["id"],
                     "Name": asteroid["name"],
@@ -32,9 +44,8 @@ def fetch_nasa_neo_data():
                     "Close Approach Date": asteroid["close_approach_data"][0]["close_approach_date"],
                     "Relative Velocity (km/s)": asteroid["close_approach_data"][0]["relative_velocity"]["kilometers_per_second"],
                     "Miss Distance (km)": asteroid["close_approach_data"][0]["miss_distance"]["kilometers"]
-                })
-        
-        print(json.dumps(important_data, indent=4))  # Print or save data as needed
+                }
+                send_data_to_kafka(important_data)  # Send data to Kafka
     else:
         print("Error fetching data:", response.status_code)
 
@@ -50,7 +61,7 @@ default_args = {
 dag = DAG(
     'nasa_neo_data_fetcher',
     default_args=default_args,
-    description='Fetch NASA NEO data daily',
+    description='Fetch NASA NEO data daily and send to Kafka',
     schedule_interval=timedelta(days=1),  # Run daily
 )
 
