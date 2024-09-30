@@ -1,2 +1,8 @@
+# Airflow core and providers
+apache-airflow==2.5.0  # Specify the Airflow version
 apache-airflow-providers-http
+apache-airflow-providers-kafka
+
+# General libraries
 requests
+kafka-python  # Kafka producer library
