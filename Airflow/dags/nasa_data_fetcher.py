@@ -8,26 +8,30 @@ from kafka import KafkaProducer
 
 # Function to send data to Kafka
 def send_data_to_kafka(data):
-    producer = KafkaProducer(
-        bootstrap_servers=os.getenv("KAFKA_BROKER"),  # Load Kafka broker from env
-        value_serializer=lambda v: json.dumps(v).encode('utf-8')
-    )
-    
-    topic = os.getenv("KAFKA_TOPIC")  # Load topic from env
-    producer.send(topic, value=data)
-    producer.flush()
-    producer.close()
+    try:
+        producer = KafkaProducer(
+            bootstrap_servers=os.getenv("KAFKA_BROKER"),  # Load Kafka broker from env
+            value_serializer=lambda v: json.dumps(v).encode('utf-8')
+        )
+        
+        topic = os.getenv("KAFKA_TOPIC")  # Load topic from env
+        producer.send(topic, value=data)
+        producer.flush()
+    except Exception as e:
+        print(f"Error sending data to Kafka: {e}")
+    finally:
+        producer.close()
 
 # Function to fetch NASA NEO data
 def fetch_nasa_neo_data():
     api_key = os.getenv("NASA_API_KEY")  # Load from environment variable
     start_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")  # Fetch data for yesterday
-    end_date = start_date
-    url = f"https://api.nasa.gov/neo/rest/v1/feed?start_date={start_date}&end_date={end_date}&api_key={api_key}"
+    url = f"https://api.nasa.gov/neo/rest/v1/feed?start_date={start_date}&end_date={start_date}&api_key={api_key}"
 
-    response = requests.get(url)
-    
-    if response.status_code == 200:
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an error for bad responses
+
         data = response.json()
         
         for date, asteroids in data['near_earth_objects'].items():
@@ -46,10 +50,10 @@ def fetch_nasa_neo_data():
                     "Miss Distance (km)": asteroid["close_approach_data"][0]["miss_distance"]["kilometers"]
                 }
                 send_data_to_kafka(important_data)  # Send data to Kafka
-    else:
-        print("Error fetching data:", response.status_code)
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching data from NASA API: {e}")
 
-# Define default arguments
+# Define default arguments for the DAG
 default_args = {
     'owner': 'airflow',
     'retries': 1,
