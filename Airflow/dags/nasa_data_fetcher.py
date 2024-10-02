@@ -12,7 +12,7 @@ import time
 # Define default arguments for the DAG
 default_args = {
     'owner': 'airscholar',
-    'start_date': datetime(2023, 9, 3, 10, 00),
+    'start_date': datetime(2024, 10, 2, 10, 00),
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
 }
