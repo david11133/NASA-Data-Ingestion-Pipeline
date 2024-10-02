@@ -2,9 +2,9 @@
 setlocal
 
 REM Install requirements if the requirements.txt file exists
-if exist "C:\opt\airflow\requirements.txt" (
+if exist "C:\\opt\airflow\\requirements.txt" (
     python -m pip install --upgrade pip
-    pip install --user -r C:\opt\airflow\requirements.txt
+    pip install --user -r C:\\opt\\airflow\\requirements.txt
 )
 
 REM Initialize the Airflow database if it doesn't exist
