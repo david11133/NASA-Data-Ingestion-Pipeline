@@ -15,7 +15,6 @@ NASA-Data-Ingestion-Pipeline/
 │   │   ├── nasa_kafka_stream.py         # Airflow DAG for Kafka streaming
 │   ├──scripts/
 │   │   └── entrypoint.sh                # Entrypoint for Airflow Docker container 
-|   └── README.md                        # Description of DAG functionality
 │
 ├── kafka/
 │   ├── kafka_producer.py                # Kafka producer script for user data     

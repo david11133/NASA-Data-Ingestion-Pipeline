@@ -1,37 +1,27 @@
-from kafka import KafkaConsumer
 import os
 import json
-import logging
-import sys
+from kafka import KafkaConsumer
+from dotenv import load_dotenv
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Load environment variables from .env file
+load_dotenv()
 
-def consume_data():
-    kafka_topic = os.getenv("KAFKA_TOPIC")
-    kafka_broker = os.getenv("KAFKA_BROKER")
-    
-    if not kafka_topic or not kafka_broker:
-        logging.error("KAFKA_TOPIC or KAFKA_BROKER environment variable not set.")
-        sys.exit(1)
+# Configuration
+KAFKA_BROKER = os.getenv("KAFKA_BROKER")
+KAFKA_TOPIC = os.getenv("KAFKA_TOPIC")
 
-    consumer = KafkaConsumer(
-        kafka_topic,
-        bootstrap_servers=kafka_broker,
-        value_deserializer=lambda x: json.loads(x.decode('utf-8')),
-        auto_offset_reset='earliest',
-        enable_auto_commit=True
-    )
-
-    try:
-        logging.info(f"Listening for messages on topic: {kafka_topic}")
-        for message in consumer:
-            logging.info(f"Received message: {message.value}")
-    except Exception as e:
-        logging.error(f"Error while consuming messages: {e}")
-    finally:
-        consumer.close()
-        logging.info("Consumer closed.")
+# Initialize Kafka consumer
+consumer = KafkaConsumer(
+    KAFKA_TOPIC,
+    bootstrap_servers=KAFKA_BROKER,
+    value_deserializer=lambda x: json.loads(x.decode('utf-8')),
+    auto_offset_reset='earliest',
+    enable_auto_commit=True,
+)
 
 if __name__ == "__main__":
-    consume_data()
+    print(f"Listening for messages on topic: {KAFKA_TOPIC}")
+    for message in consumer:
+        data = message.value
+        # Here, you can implement any processing logic for the received data
+        print(f"Received NEO Data: ID: {data['id']}, Name: {data['name']}, Close Approach Date: {data['close_approach_date']}")
