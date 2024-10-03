@@ -13,13 +13,14 @@ NASA-Data-Ingestion-Pipeline/
 ├── airflow/
 │   ├── dags/
 │   │   ├── nasa_kafka_stream.py         # Airflow DAG for Kafka streaming
-│   ├──scripts/
+│   ├── scripts/
 │   │   └── entrypoint.sh                # Entrypoint for Airflow Docker container 
+|   └── .env
 │
 ├── kafka/
-│   ├── kafka_producer.py                # Kafka producer script for user data     
-│   ├── kafka_consumer.py                # Kafka consumer script          
-│   └── .env                             # Kafka configuration
+|   ├── .env                       # Kafka configuration
+│   ├── consumer.py                # Kafka consumer script          
+│   └── producer.py                # Kafka producer script for user data                           
 │
 ├── cassandra/
 │   ├── scripts/
