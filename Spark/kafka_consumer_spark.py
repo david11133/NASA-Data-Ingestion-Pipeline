@@ -8,8 +8,8 @@ def main():
         .getOrCreate()
 
     # Define Kafka parameters
-    kafka_broker = "your_kafka_broker:9092"  # Replace with your Kafka broker
-    kafka_topic = "your_kafka_topic"          # Replace with your topic name
+    kafka_broker = "KAFKA_BROKER:9092"  # Replace with your Kafka broker
+    kafka_topic = "KAFKA_TOPIC"          # Replace with your topic name
 
     # Read data from Kafka
     df = spark.readStream \
