@@ -18,10 +18,18 @@ default_args = {
 }
 
 # Function to fetch NASA NEO data
-def get_nasa_data():
+def get_nasa_data(**kwargs):
     api_key = os.getenv("NASA_API_KEY")  # Load from environment variable
-    start_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    url = f"https://api.nasa.gov/neo/rest/v1/feed?start_date={start_date}&end_date={start_date}&api_key={api_key}"
+    
+    # Use execution_date from Airflow to get the current date for this run
+    execution_date = kwargs['execution_date']
+    
+    # Last 7 days 
+    end_date = execution_date.strftime("%Y-%m-%d")
+    start_date = (execution_date - timedelta(days=7)).strftime("%Y-%m-%d")
+    
+    # Construct the URL with the dynamic date range
+    url = f"https://api.nasa.gov/neo/rest/v1/feed?start_date={start_date}&end_date={end_date}&api_key={api_key}"
 
     response = requests.get(url)
     response.raise_for_status()
@@ -49,12 +57,12 @@ def format_nasa_data(data):
     return formatted_data
 
 # Function to stream data to Kafka
-def stream_data():
+def stream_data(**kwargs):
     producer = KafkaProducer(bootstrap_servers=os.getenv("KAFKA_BROKER"), 
                              value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
     try:
-        data = get_nasa_data()
+        data = get_nasa_data(**kwargs)  
         formatted_data = format_nasa_data(data)
 
         for item in formatted_data:
@@ -65,7 +73,7 @@ def stream_data():
         logging.error(f'An error occurred: {e}')
     finally:
         producer.flush()  # Ensure all messages are sent
-        producer.close()  # Close the producer
+        producer.close()  
 
 # Define the DAG
 with DAG('nasa_neo_user_automation',
@@ -75,5 +83,6 @@ with DAG('nasa_neo_user_automation',
 
     streaming_task = PythonOperator(
         task_id='stream_nasa_data_to_kafka',
-        python_callable=stream_data
+        python_callable=stream_data,
+        provide_context=True 
     )
