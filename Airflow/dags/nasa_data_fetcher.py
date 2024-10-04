@@ -18,9 +18,12 @@ default_args = {
 }
 
 # Function to fetch NASA NEO data
-def get_nasa_data(**kwargs):
+def get_nasa_data(**kwargs) -> dict:
     api_key = os.getenv("NASA_API_KEY")  # Load from environment variable
-    
+    if not api_key:
+        logging.error("NASA API key is not set in environment variables.")
+        return {}
+
     # Use execution_date from Airflow to get the current date for this run
     execution_date = kwargs['execution_date']
     
@@ -31,17 +34,21 @@ def get_nasa_data(**kwargs):
     # Construct the URL with the dynamic date range
     url = f"https://api.nasa.gov/neo/rest/v1/feed?start_date={start_date}&end_date={end_date}&api_key={api_key}"
 
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Error fetching data from NASA API: {e}")
+        return {}
 
 # Function to format NASA NEO data
-def format_nasa_data(data):
+def format_nasa_data(data) -> list:
     formatted_data = []
-    for date, asteroids in data['near_earth_objects'].items():
+    for date, asteroids in data.get('near_earth_objects', {}).items():
         for asteroid in asteroids:
             important_data = {
-                "id": str(uuid.uuid4()),
+                "id": str(uuid.uuid4()),  # Consider hashing the asteroid ID for consistency
                 "Date": date,
                 "Name": asteroid["name"],
                 "Estimated Diameter (km)": {
@@ -56,21 +63,27 @@ def format_nasa_data(data):
             formatted_data.append(important_data)
     return formatted_data
 
+# Function to retrieve and format data
+def retrieve_and_format_data(**kwargs) -> list:
+    data = get_nasa_data(**kwargs)
+    return format_nasa_data(data)
+
 # Function to stream data to Kafka
 def stream_data(**kwargs):
-    producer = KafkaProducer(bootstrap_servers=os.getenv("KAFKA_BROKER"), 
+    producer = KafkaProducer(bootstrap_servers=os.getenv("KAFKA_BROKER"),
                              value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-
+    
     try:
-        data = get_nasa_data(**kwargs)  
-        formatted_data = format_nasa_data(data)
+        logging.info('Retrieving and formatting NASA NEO data...')
+        formatted_data = retrieve_and_format_data(**kwargs)
 
-        for item in formatted_data:
-            producer.send(os.getenv("KAFKA_TOPIC"), value=item)
-            time.sleep(1)  # Optional: throttle the requests
+        if formatted_data:
+            for item in formatted_data:
+                producer.send(os.getenv("KAFKA_TOPIC"), value=item)
+                time.sleep(0.1)  # Optional: throttle the requests, adjust as needed
 
     except Exception as e:
-        logging.error(f'An error occurred: {e}')
+        logging.error(f'An error occurred while streaming data: {e}')
     finally:
         producer.flush()  # Ensure all messages are sent
         producer.close()  
