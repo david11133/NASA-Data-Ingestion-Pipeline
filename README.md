@@ -22,14 +22,6 @@ NASA-Data-Ingestion-Pipeline/
 │   ├── consumer.py                # Kafka consumer script          
 │   └── producer.py                # Kafka producer script for user data                           
 │
-├── cassandra/
-│   ├── scripts/
-│   │   └── cassandra_connector.py       # Cassandra connection management
-│   ├── config/
-│   │   └── cassandra.yaml                # Cassandra settings
-│   └── queries/
-│       └── create_tables.cql            # CQL scripts for table creation
-│
 ├── spark/
 │   ├── scripts/
 │   │   └── spark_stream.py              # Spark streaming job
@@ -38,17 +30,9 @@ NASA-Data-Ingestion-Pipeline/
 │   └── examples/
 │       └── example_spark_job.py         # Example Spark job
 │
-├── postgres/
-│   ├── config/
-│   │   └── postgres_init.sql             # Initialization SQL scripts
-│   └── data/
-│       └── sample_data.sql               # Sample data for PostgreSQL
-│
 ├── requirements.txt                      # Python dependencies for Airflow
 │
 ├── docker-compose.yml                    # Docker Compose file for services
-│
-├── Dockerfile                            # Custom Dockerfile if needed
 │
 ├── tests/
 │   ├── test_airflow.py                  # Unit tests for Airflow DAGs
