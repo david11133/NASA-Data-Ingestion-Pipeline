@@ -7,8 +7,6 @@
 > [!NOTE]
 > This project is currently under development. Features and functionalities are still being added, and the structure may change.
 
-> **⚠️ Note:** This project is currently under development. Features and functionalities are still being added, and the structure may change.
-
 ## Overview
 
 This project involves fetching data about near-Earth objects (NEOs) from NASA's NEO API, streaming it to Kafka, and processing it using Apache Spark, with the final goal of storing the data in Cassandra. The project is structured to facilitate easy maintenance and scalability.
