@@ -1,6 +1,6 @@
 # NASA NEO Data Engineering Project
 
-> [!WARNING]
+> [!NOTE]
 > This project is currently under development. Features and functionalities are still being added, and the structure may change.
 
 > **⚠️ Note:** This project is currently under development. Features and functionalities are still being added, and the structure may change.
