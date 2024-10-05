@@ -17,6 +17,14 @@ This project demonstrates a real-time data streaming and processing pipeline usi
 
 ## Technologies Used
 
+- Cloud - [**AWS**](https://aws.amazon.com/)
+- Containerization - [**Docker**](https://www.docker.com), [**Docker Compose**](https://docs.docker.com/compose/)
+- Stream Processing - [**Kafka**](https://kafka.apache.org)
+- Orchestration - [**Airflow**](https://airflow.apache.org)
+- Transformation - [**Spark**](https://spark.apache.org)
+- Data Lake - [**Cassandra**](https://cassandra.apache.org/_/index.html)
+- Language - [**Python**](https://www.python.org)
+
 - **Apache Airflow**: For orchestrating the data pipeline.
 - **Apache Kafka**: For streaming data between components.
 - **Apache Spark**: For processing the streamed data.
