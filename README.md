@@ -15,6 +15,14 @@ This project demonstrates a real-time data streaming and processing pipeline usi
 
 ![System Architecture](https://github.com/david11133/NASA-Data-Ingestion-Pipeline/blob/main/docs/data%20architecture.drawio.svg)
 
+## Technologies Used
+
+- **Apache Airflow**: For orchestrating the data pipeline.
+- **Apache Kafka**: For streaming data between components.
+- **Apache Spark**: For processing the streamed data.
+- **Cassandra**: For storing processed data.
+- **Python**: The primary programming language used.
+  
 ## Project Structure
 ```graphql
 NASA-Data-Ingestion-Pipeline/
@@ -53,13 +61,6 @@ NASA-Data-Ingestion-Pipeline/
 
 ```
 
-## Technologies Used
-
-- **Apache Airflow**: For orchestrating the data pipeline.
-- **Apache Kafka**: For streaming data between components.
-- **Apache Spark**: For processing the streamed data.
-- **Cassandra**: For storing processed data.
-- **Python**: The primary programming language used.
 
 ## Setup Instructions
 
