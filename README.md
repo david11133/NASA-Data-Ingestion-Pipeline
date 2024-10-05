@@ -9,6 +9,10 @@
 
 This project involves fetching data about near-Earth objects (NEOs) from NASA's NEO API, streaming it to Kafka, and processing it using Apache Spark, with the final goal of storing the data in Cassandra. The project is structured to facilitate easy maintenance and scalability.
 
+## Data Architecture
+
+![System Architecture](https://github.com/david11133/NASA-Data-Ingestion-Pipeline/blob/main/docs/data%20architecture.drawio.svg)
+
 ## Project Structure
 ```graphql
 NASA-Data-Ingestion-Pipeline/
