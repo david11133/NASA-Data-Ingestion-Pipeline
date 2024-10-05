@@ -24,12 +24,6 @@ This project demonstrates a real-time data streaming and processing pipeline usi
 - Transformation - [**Spark**](https://spark.apache.org)
 - Data Lake - [**Cassandra**](https://cassandra.apache.org/_/index.html)
 - Language - [**Python**](https://www.python.org)
-
-- **Apache Airflow**: For orchestrating the data pipeline.
-- **Apache Kafka**: For streaming data between components.
-- **Apache Spark**: For processing the streamed data.
-- **Cassandra**: For storing processed data.
-- **Python**: The primary programming language used.
   
 ## Project Structure
 ```graphql
