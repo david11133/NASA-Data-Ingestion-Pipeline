@@ -1,5 +1,8 @@
 # NASA NEO Data Engineering Project
 
+> [!WARNING]
+> This project is currently under development. Features and functionalities are still being added, and the structure may change.
+
 > **⚠️ Note:** This project is currently under development. Features and functionalities are still being added, and the structure may change.
 
 ## Overview
@@ -33,12 +36,6 @@ NASA-Data-Ingestion-Pipeline/
 ├── requirements.txt                      # Python dependencies for Airflow
 │
 ├── docker-compose.yml                    # Docker Compose file for services
-│
-├── tests/
-│   ├── test_airflow.py                  # Unit tests for Airflow DAGs
-│   ├── test_kafka.py                    # Unit tests for Kafka integration
-│   ├── test_spark.py                    # Unit tests for Spark jobs
-│   └── test_cassandra.py                # Unit tests for Cassandra scripts
 │
 ├── docs/
 │   ├── architecture.md                  # Overview of system architecture
