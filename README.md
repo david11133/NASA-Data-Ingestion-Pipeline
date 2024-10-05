@@ -1,4 +1,8 @@
-# NASA NEO Data Engineering Project
+<p align="center">
+<img height="150" width="150" src="https://th.bing.com/th/id/R.ae42d855fd2e000889b1733f7833102d?rik=L0xX4U5jfJz7Bw&pid=ImgRaw&r=0"/>
+</p>
+
+<h1 align="center">NASA NEO Data Engineering Project</h1>
 
 > [!NOTE]
 > This project is currently under development. Features and functionalities are still being added, and the structure may change.
