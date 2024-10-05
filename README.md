@@ -1,5 +1,5 @@
 <p align="center">
-<img height="150" width="150" src="https://th.bing.com/th/id/R.ae42d855fd2e000889b1733f7833102d?rik=L0xX4U5jfJz7Bw&pid=ImgRaw&r=0"/>
+<img height="150" width="150" src="https://cdn.icon-icons.com/icons2/2699/PNG/512/nasa_logo_icon_170926.png"/>
 </p>
 
 <h1 align="center">NASA NEO Data Engineering Project</h1>
