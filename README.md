@@ -1,26 +1,19 @@
 <p align="center">
-
 <img height="150" width="150" src="https://cdn.icon-icons.com/icons2/2699/PNG/512/nasa_logo_icon_170926.png"/>
-
 </p>
 
 <h1 align="center">NASA NEO Data Engineering Project</h1>
 
-
 > [!NOTE]
-
 > This project is currently under development. Features and functionalities are still being added, and the structure may change.
 
 ## 💡 Overview
----
 This project demonstrates a real-time data streaming and processing pipeline using NASA's NEOWS (Near Earth Object Web Service) APIs to generate dynamic data on near-Earth objects. A Python script fetches data from the NEOWS APIs, publishing it to a Kafka topic for efficient management. We orchestrate this process with Apache Airflow, scheduling the data generation script to run regularly. Spark Structured Streaming is then utilized to consume and modify the data from Kafka, which is ultimately stored in a Cassandra database. All components run within Docker containers, ensuring a consistent and scalable development environment.
 
 ## 📜 Scenario
----
 This project utilizes a database of near-Earth objects (NEOs) sourced from NASA's NEOWS APIs. The database is regularly updated with real-time data on NEOs, including their trajectories and potential hazards. To ensure the data is actionable, it requires automated cleaning and transformation processes to convert it into usable formats with minimal human intervention. The goal is to facilitate continuous monitoring and analysis, providing valuable insights into the risks posed by these celestial objects.
 
 ## 📊 Data
----
 The data for this project is sourced from NASA's NEOWS APIs, which provide extensive information on near-Earth objects.
 
 ```json
@@ -41,11 +34,9 @@ The data for this project is sourced from NASA's NEOWS APIs, which provide exten
   
 
 ## 🏗️ Data Architecture
----
 ![System Architecture](https://github.com/david11133/NASA-Data-Ingestion-Pipeline/raw/main/docs/data%20architecture.drawio.svg)
 
 ## 🛠 Technologies Used
----
 - Cloud - [**AWS**](https://aws.amazon.com/)
 - Containerization - [**Docker**](https://www.docker.com), [**Docker Compose**](https://docs.docker.com/compose/)
 - Stream Processing - [**Kafka**](https://kafka.apache.org)
@@ -55,10 +46,8 @@ The data for this project is sourced from NASA's NEOWS APIs, which provide exten
 - Language - [**Python**](https://www.python.org)
 
 ## 🔧 Project Structure
----
 
 ```graphql
-
 NASA-Data-Ingestion-Pipeline/
 
 │
@@ -90,8 +79,7 @@ NASA-Data-Ingestion-Pipeline/
 └── README.md                            # Main project overview and instructions
 ```
 
-###  Getting Started
----
+##  Getting Started
 1. Clone the repository:
     ```bash
     git clone https://github.com/david11133/NASA-Data-Ingestion-Pipeline
@@ -108,5 +96,4 @@ NASA-Data-Ingestion-Pipeline/
     ```
 
 ## 🌐 Contact
----
 For any questions or contributions, please reach out to [davidnady4yad@gmail.com].
