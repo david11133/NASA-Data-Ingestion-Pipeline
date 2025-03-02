@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
@@ -125,7 +123,7 @@ services:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW_WEBSERVER_SECRET_KEY=this_is_a_very_secured_key
       - KAFKA_BROKER=broker:9092  # Update Kafka broker for Scheduler
-      - KAFKA_TOPIC=nasa_neo_data   # Topic for Scheduler to consume
+      - KAFKA_TOPIC=nasa_neo_data   # Topic for Scheduler to consume 
     command: bash -c "pip install -r ./requirements.txt && airflow db upgrade && airflow scheduler"
     networks:
       - confluent
