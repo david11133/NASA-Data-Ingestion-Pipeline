@@ -96,4 +96,4 @@ NASA-Data-Ingestion-Pipeline/
     ```
 
 ## 🌐 Contact
-For any questions or contributions, please reach out to [davidnady4yad@gmail.com].
+For any questions or contributions, please reach out to [david.naddie@gmail.com].
