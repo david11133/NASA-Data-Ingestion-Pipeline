@@ -28,7 +28,7 @@ def create_table(session):
         miss_distance FLOAT
     );
     """)
-    logging.info("Table created successfully!")
+    logging.info("Table for neo created successfully!")
 
 def insert_data(session, **kwargs):
     logging.info("Inserting data...")
