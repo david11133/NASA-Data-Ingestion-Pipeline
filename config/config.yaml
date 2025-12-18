@@ -1,0 +1,16 @@
+# NASA API Configuration
+api:
+  base_url: "https://api.nasa.gov/neo/rest/v1"
+  timeout: 30
+  max_retries: 3
+  retry_delay: 2
+
+# Data Storage
+storage:
+  raw_data_path: "data/raw"
+  
+# Logging
+logging:
+  level: "INFO"
+  log_file: "logs/nasa_de.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
