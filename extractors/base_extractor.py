@@ -1,25 +1,27 @@
+##########################################################################################
 import requests
 import time
 import logging
 from typing import Dict, Any, Optional
+##########################################################################################
 
 class BaseExtractor:
     """
-    Base class for all API extractors.
     Handles common functionality like HTTP requests, retries, and error handling.
     """
     
+##########################################################################################
     def __init__(self, api_key: str, base_url: str, timeout: int = 30, 
                  max_retries: int = 3, retry_delay: int = 2):
         """
         Initialize the base extractor.
         
         Args:
-            api_key: API key for authentication
-            base_url: Base URL for the API
-            timeout: Request timeout in seconds
-            max_retries: Maximum number of retry attempts
-            retry_delay: Delay between retries in seconds
+            api_key: For authentication
+            base_url: API URL
+            timeout: Request timeout
+            max_retries: Maximum no. of retry attempts
+            retry_delay: Delay between retries
         """
         self.api_key = api_key
         self.base_url = base_url
@@ -27,7 +29,8 @@ class BaseExtractor:
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self.logger = logging.getLogger(self.__class__.__name__)
-        
+
+##########################################################################################
     def _make_request(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Make an HTTP GET request with retry logic.
@@ -37,10 +40,10 @@ class BaseExtractor:
             params: Query parameters as dictionary
             
         Returns:
-            JSON response as dictionary
+            JSON response
             
         Raises:
-            Exception: If all retry attempts fail
+            Exception: If all retries fail
         """
         # Add API key to parameters
         if params is None:
@@ -88,6 +91,7 @@ class BaseExtractor:
                 else:
                     raise Exception(f"Request failed after {self.max_retries} attempts: {e}")
     
+##########################################################################################
     def extract(self) -> Dict[str, Any]:
         """
         Extract data from the API.

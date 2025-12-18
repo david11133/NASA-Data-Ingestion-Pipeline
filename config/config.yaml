@@ -12,5 +12,5 @@ storage:
 # Logging
 logging:
   level: "INFO"
-  log_file: "logs/nasa_de.log"
+  log_file: "logs/nasa.log"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

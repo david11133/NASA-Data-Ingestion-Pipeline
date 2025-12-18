@@ -1,23 +1,26 @@
+##########################################################################################
 from datetime import datetime, timedelta
 from typing import Dict, Any
 import json
 import os
 import re
 from extractors.base_extractor import BaseExtractor
+##########################################################################################
 
 class NEOExtractor(BaseExtractor):
     """
-    Extractor for NASA Near Earth Objects (NEO) data.
+    Extractor for NASA Near Earth Objects (NEOs) data.
     """
     
+##########################################################################################
     def __init__(self, api_key: str, base_url: str, output_path: str, **kwargs):
         """
         Initialize NEO extractor.
         
         Args:
             api_key: NASA API key
-            base_url: Base URL for NASA NEO API
-            output_path: Path to save raw JSON files
+            base_url: Base URL for NEOs API
+            output_path: Path to save JSON files
             **kwargs: Additional arguments for BaseExtractor
         """
         super().__init__(api_key, base_url, **kwargs)
@@ -26,13 +29,14 @@ class NEOExtractor(BaseExtractor):
         # Create output directory if it doesn't exist
         os.makedirs(output_path, exist_ok=True)
         
+##########################################################################################
     def extract_by_date_range(self, start_date: str, end_date: str) -> Dict[str, Any]:
         """
-        Extract NEO data for a specific date range.
+        Extract NEO data for a specific date range (eg, 7 days ago).
         
         Args:
-            start_date: Start date in YYYY-MM-DD format
-            end_date: End date in YYYY-MM-DD format
+            start_date: Start date (YYYY-MM-DD)
+            end_date: End date (YYYY-MM-DD)
             
         Returns:
             Dictionary containing NEO data
@@ -48,14 +52,15 @@ class NEOExtractor(BaseExtractor):
             'end_date': end_date
         }
         
-        # Make the request using parent class method
+        # use parent class method
         data = self._make_request(endpoint, params)
         
-        # Save raw JSON to file
+        # save to JSON file
         self._save_raw_data(data, start_date, end_date)
         
         return data
-    
+
+##########################################################################################
     def extract_today(self) -> Dict[str, Any]:
         """
         Extract NEO data for today.
@@ -68,17 +73,18 @@ class NEOExtractor(BaseExtractor):
         
         return self.extract_by_date_range(today, today)
     
+##########################################################################################
     def extract_last_n_days(self, n_days: int = 7) -> Dict[str, Any]:
         """
         Extract NEO data for the last N days.
         
         Args:
-            n_days: Number of days to fetch (NASA API allows max 7 days)
+            n_days: Number of days to fetch (NASA API has limit of 7 days)
             
         Returns:
             Dictionary containing NEO data
         """
-        # NASA API allows maximum 7 days
+        
         if n_days > 7:
             self.logger.warning(f"NASA API allows max 7 days, setting n_days to 7")
             n_days = 7
@@ -91,9 +97,10 @@ class NEOExtractor(BaseExtractor):
         
         return self.extract_by_date_range(start_date_str, end_date_str)
     
+##########################################################################################
     def _save_raw_data(self, data: Dict[str, Any], start_date: str, end_date: str):
         """
-        Save raw JSON data to file with API key sanitization.
+        Save to JSON file
         
         Args:
             data: Data to save
@@ -105,7 +112,7 @@ class NEOExtractor(BaseExtractor):
         filepath = os.path.join(self.output_path, filename)
         
         try:
-            # Sanitize API keys before saving
+            # Sanitize API keys before saving (for security)
             sanitized_data = self._sanitize_api_keys(data)
             
             with open(filepath, 'w') as f:
@@ -117,6 +124,7 @@ class NEOExtractor(BaseExtractor):
             self.logger.error(f"Failed to save raw data: {e}")
             raise
     
+##########################################################################################
     def _sanitize_api_keys(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Remove API keys from URLs in the data structure.
@@ -132,6 +140,7 @@ class NEOExtractor(BaseExtractor):
         sanitized_str = re.sub(r'api_key=[A-Za-z0-9]+', 'api_key=REDACTED', data_str)
         return json.loads(sanitized_str)
     
+##########################################################################################
     def extract(self) -> Dict[str, Any]:
         """
         Default extract method - extracts last 7 days of data.
