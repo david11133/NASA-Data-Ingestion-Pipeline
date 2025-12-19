@@ -38,3 +38,30 @@
 2025-12-19 10:15:33,505 - __main__ - INFO -   2025-12-19: 17 NEOs
 2025-12-19 10:15:33,505 - __main__ - INFO - ------------------------------------------------------------
 2025-12-19 10:15:33,506 - __main__ - INFO - [SUCCESS] Data extraction completed successfully!
+2025-12-19 11:52:29,581 - __main__ - INFO - ======================================================================
+2025-12-19 11:52:29,581 - __main__ - INFO - NASA NEO DATA PIPELINE STARTED
+2025-12-19 11:52:29,581 - __main__ - INFO - ======================================================================
+2025-12-19 11:52:29,581 - __main__ - INFO - [1/4] Initializing database schema...
+2025-12-19 11:52:29,594 - database.connection - INFO - DatabaseManager initialized with path: data\nasa_neo.db
+2025-12-19 11:52:29,594 - database.schema - INFO - Initializing database schema...
+2025-12-19 11:52:29,758 - database.connection - INFO - Database connection established: data\nasa_neo.db
+2025-12-19 11:52:32,516 - database.connection - INFO - SQL script executed successfully
+2025-12-19 11:52:32,761 - __main__ - INFO - [2/4] Extracting NEO data from NASA API...
+2025-12-19 11:52:32,761 - NEOExtractor - INFO - Extracting NEO data from 2025-12-13 to 2025-12-19
+2025-12-19 11:52:32,761 - NEOExtractor - INFO - Attempt 1/3: Requesting https://api.nasa.gov/neo/rest/v1/feed
+2025-12-19 11:52:36,088 - NEOExtractor - INFO - Successfully fetched data from https://api.nasa.gov/neo/rest/v1/feed
+2025-12-19 11:52:36,170 - NEOExtractor - INFO - Raw data saved to: data/raw\neo_raw_2025-12-13_to_2025-12-19_20251219_115236.json
+2025-12-19 11:52:36,170 - __main__ - INFO - Extracted 102 NEOs
+2025-12-19 11:52:36,170 - __main__ - INFO - [3/4] Saving raw JSON data...
+2025-12-19 11:52:36,448 - __main__ - INFO - Raw data saved to data\raw\2025-12\2025-12-13.json
+2025-12-19 11:52:36,448 - __main__ - INFO - [4/4] Loading data into SQLite database...
+2025-12-19 11:52:36,448 - loaders.neo_loader - INFO - Processing date range: 2025-12-13 to 2025-12-19
+2025-12-19 11:54:42,612 - loaders.neo_loader - INFO - Loading complete: {'asteroids_inserted': 102, 'asteroids_updated': 0, 'close_approaches_inserted': 102, 'diameters_inserted': 408, 'errors': []}
+2025-12-19 11:54:42,612 - __main__ - INFO - Load completed:
+2025-12-19 11:54:42,612 - __main__ - INFO -   Asteroids inserted: 102
+2025-12-19 11:54:42,612 - __main__ - INFO -   Asteroids updated: 0
+2025-12-19 11:54:42,612 - __main__ - INFO -   Close approaches: 102
+2025-12-19 11:54:42,612 - __main__ - INFO -   Diameters inserted: 408
+2025-12-19 11:54:42,612 - __main__ - INFO - ======================================================================
+2025-12-19 11:54:42,612 - __main__ - INFO - PIPELINE FINISHED SUCCESSFULLY
+2025-12-19 11:54:42,612 - __main__ - INFO - ======================================================================
