@@ -18,3 +18,23 @@
 2025-12-18 12:59:46,644 - __main__ - INFO -   2025-12-13: 12 NEOs
 2025-12-18 12:59:46,645 - __main__ - INFO - ------------------------------------------------------------
 2025-12-18 12:59:46,645 - __main__ - INFO - [SUCCESS] Data extraction completed successfully!
+2025-12-19 10:15:29,072 - __main__ - INFO - ============================================================
+2025-12-19 10:15:29,074 - __main__ - INFO - Starting NASA NEO Data Extraction
+2025-12-19 10:15:29,076 - __main__ - INFO - ============================================================
+2025-12-19 10:15:29,079 - __main__ - INFO - Extracting NEO data for the last 7 days...
+2025-12-19 10:15:29,080 - NEOExtractor - INFO - Extracting NEO data from 2025-12-13 to 2025-12-19
+2025-12-19 10:15:29,080 - NEOExtractor - INFO - Attempt 1/3: Requesting https://api.nasa.gov/neo/rest/v1/feed
+2025-12-19 10:15:33,343 - NEOExtractor - INFO - Successfully fetched data from https://api.nasa.gov/neo/rest/v1/feed
+2025-12-19 10:15:33,495 - NEOExtractor - INFO - Raw data saved to: data/raw\neo_raw_2025-12-13_to_2025-12-19_20251219_101533.json
+2025-12-19 10:15:33,498 - __main__ - INFO - ------------------------------------------------------------
+2025-12-19 10:15:33,499 - __main__ - INFO - Extraction Summary:
+2025-12-19 10:15:33,499 - __main__ - INFO - Total NEOs found: 102
+2025-12-19 10:15:33,500 - __main__ - INFO -   2025-12-16: 13 NEOs
+2025-12-19 10:15:33,501 - __main__ - INFO -   2025-12-15: 12 NEOs
+2025-12-19 10:15:33,502 - __main__ - INFO -   2025-12-18: 17 NEOs
+2025-12-19 10:15:33,502 - __main__ - INFO -   2025-12-17: 18 NEOs
+2025-12-19 10:15:33,502 - __main__ - INFO -   2025-12-14: 12 NEOs
+2025-12-19 10:15:33,504 - __main__ - INFO -   2025-12-13: 13 NEOs
+2025-12-19 10:15:33,505 - __main__ - INFO -   2025-12-19: 17 NEOs
+2025-12-19 10:15:33,505 - __main__ - INFO - ------------------------------------------------------------
+2025-12-19 10:15:33,506 - __main__ - INFO - [SUCCESS] Data extraction completed successfully!
