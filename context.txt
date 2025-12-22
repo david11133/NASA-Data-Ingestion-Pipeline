@@ -1,0 +1,514 @@
+NASA NEOs is a public free API, that I am using to build a data engineernig project.
+I am trying to apply all DE concepts in this project to learn as much as possible.
+
+here is what I did so far:
+I will provide snipsets of my code to explain the workflow
+
+Phase 1. Foundation & Data Ingestion
+
+What I Built
+
+Simple API Ingestion Script
+Got free NASA API key from: https://api.nasa.gov
+
+Built My First Extractor
+```
+project structure
+
+nasa-de-project/
+├── config/
+│   └── config.yaml
+├── extractors/
+│   ├── __init__.py
+│   ├── base_extractor.py
+│   └── neo_extractor.py
+├── .env
+└── main.py
+```
+
+The config.yaml file has these configuration:
+
+```yaml
+api:
+  base_url: "https://api.nasa.gov/neo/rest/v1"
+  timeout: 30
+  max_retries: 3
+  retry_delay: 2
+storage:
+  raw_data_path: "data/raw"
+logging:
+  level: "INFO"
+  log_file: "logs/nasa.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+```
+
+The base_extractor.py handles common functionality like HTTP requests, retries, and error handling.
+
+```python
+class BaseExtractor:
+    def __init__(self, api_key: str, base_url: str, timeout: int = 30, 
+                 max_retries: int = 3, retry_delay: int = 2):
+        """
+        Initialize the base extractor.
+        Args:
+            api_key: For authentication
+            base_url: API URL
+            timeout: Request timeout
+            max_retries: Maximum no. of retry attempts
+            retry_delay: Delay between retries
+        """
+    def _make_request(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Make an HTTP GET request with retry logic.
+        Args:
+            endpoint: API endpoint (will be appended to base_url)
+            params: Query parameters as dictionary
+        Returns:
+            JSON response
+        Raises:
+            Exception: If all retries fail
+        """
+    def extract(self) -> Dict[str, Any]:
+        """
+        Extract data from the API.
+        This method should be overridden by child classes.
+        """
+```
+
+The neo_extractor.py extracts NASA Near Earth Objects (NEOs) data.
+
+```python
+class NEOExtractor(BaseExtractor):
+    def __init__(self, api_key: str, base_url: str, output_path: str, **kwargs):
+        """
+        Initialize NEO extractor.
+        Args:
+            api_key: NASA API key
+            base_url: Base URL for NEOs API
+            output_path: Path to save JSON files
+            **kwargs: Additional arguments for BaseExtractor
+        """
+    def extract_by_date_range(self, start_date: str, end_date: str) -> Dict[str, Any]:
+        """
+        Extract NEO data for a specific date range (eg, 7 days ago).
+        Args:
+            start_date: Start date (YYYY-MM-DD)
+            end_date: End date (YYYY-MM-DD)
+        Returns:
+            Dictionary containing NEO data
+        """
+    def extract_today(self) -> Dict[str, Any]:
+        """
+        Extract NEO data for today.
+        Returns:
+            Dictionary containing today's NEO data
+        """
+    def extract_last_n_days(self, n_days: int = 7) -> Dict[str, Any]:
+        """
+        Extract NEO data for the last N days.
+        Args:
+            n_days: Number of days to fetch (NASA API has limit of 7 days)
+        Returns:
+            Dictionary containing NEO data
+        """
+    def _save_raw_data(self, data: Dict[str, Any], start_date: str, end_date: str):
+        """
+        Save to JSON file
+        Args:
+            data: Data to save
+            start_date: Start date for filename
+            end_date: End date for filename
+        """
+    def _sanitize_api_keys(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Remove API keys from URLs in the data structure.
+        Args:
+            data: Dictionary containing NEO data
+        Returns:
+            Sanitized data dictionary
+        """
+    def extract(self) -> Dict[str, Any]:
+        """
+        Default extract method - extracts last 7 days of data.
+        Returns:
+            Dictionary containing NEO data
+        """
+```
+
+Phase 2: Data Storage & Organization (Weeks 3-4)
+
+What I Built
+
+Local Data Lake + SQLite Database
+
+1. Organize Raw Data (Bronze Layer)
+
+```
+data/
+├── processed/
+├── raw/
+│   ├── 2024-01/
+│   │   ├── 2025-12-13.json  << Generated file once I ran the code
+│   ├── neos/
+├── nasa_new.db   << Generated file once I ran the code
+database/
+├── ddl/
+│   ├── new_tables.sql
+├── connection.py
+├── schema.py
+loaders/
+├── __init__,py
+├── base_loader.py
+├── neo_loader.py
+```
+
+The generated json file from this code when I run main.py is:
+
+```json
+{
+  "links": {
+    "next": "http://api.nasa.gov/neo/rest/v1/feed?start_date=2025-12-19&end_date=2025-12-25&detailed=false&api_key=9VSPRf91gXNMIqnQ6Qyfd367bsbccVKp4w617pv2",
+    "previous": "http://api.nasa.gov/neo/rest/v1/feed?start_date=2025-12-07&end_date=2025-12-13&detailed=false&api_key=9VSPRf91gXNMIqnQ6Qyfd367bsbccVKp4w617pv2",
+    "self": "http://api.nasa.gov/neo/rest/v1/feed?start_date=2025-12-13&end_date=2025-12-19&detailed=false&api_key=9VSPRf91gXNMIqnQ6Qyfd367bsbccVKp4w617pv2"
+  },
+  "element_count": 102,
+  "near_earth_objects": {
+    "2025-12-16": [
+      {
+        "links": {
+          "self": "http://api.nasa.gov/neo/rest/v1/neo/3648766?api_key=9VSPRf91gXNMIqnQ6Qyfd367bsbccVKp4w617pv2"
+        },
+        "id": "3648766",
+        "neo_reference_id": "3648766",
+        "name": "(2013 TG4)",
+        "nasa_jpl_url": "https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/?sstr=3648766",
+        "absolute_magnitude_h": 21.8,
+        "estimated_diameter": {
+          "kilometers": {
+            "estimated_diameter_min": 0.1160259082,
+            "estimated_diameter_max": 0.2594418179
+          },
+          "meters": {
+            "estimated_diameter_min": 116.0259082094,
+            "estimated_diameter_max": 259.4418179074
+          },
+          "miles": {
+            "estimated_diameter_min": 0.0720951346,
+            "estimated_diameter_max": 0.1612096218
+          },
+          "feet": {
+            "estimated_diameter_min": 380.6624406898,
+            "estimated_diameter_max": 851.1870938635
+          }
+        },
+        "is_potentially_hazardous_asteroid": false,
+        "close_approach_data": [
+          {
+            "close_approach_date": "2025-12-16",
+            "close_approach_date_full": "2025-Dec-16 03:38",
+            "epoch_date_close_approach": 1765856280000,
+            "relative_velocity": {
+              "kilometers_per_second": "3.4477584253",
+              "kilometers_per_hour": "12411.9303309678",
+              "miles_per_hour": "7712.2908214839"
+            },
+            "miss_distance": {
+              "astronomical": "0.4904349255",
+              "lunar": "190.7791860195",
+              "kilometers": "73368020.228408685",
+              "miles": "45588773.790402453"
+            },
+            "orbiting_body": "Earth"
+          }
+        ],
+        "is_sentry_object": false
+      },
+```
+
+The new_tables.sql is supposed to create my tables:
+
+```sql
+CREATE TABLE IF NOT EXISTS asteroids (
+    neo_id TEXT PRIMARY KEY,
+    neo_reference_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    nasa_jpl_url TEXT,
+    absolute_magnitude_h REAL,
+    is_potentially_hazardous BOOLEAN NOT NULL,
+    is_sentry_object BOOLEAN NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_asteroid_name ON asteroids(name);
+CREATE INDEX IF NOT EXISTS idx_potentially_hazardous ON asteroids(is_potentially_hazardous);
+CREATE TABLE IF NOT EXISTS estimated_diameters (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    neo_id TEXT NOT NULL,
+    unit TEXT NOT NULL, -- 'kilometers', 'meters', 'miles', 'feet'
+    estimated_diameter_min REAL NOT NULL,
+    estimated_diameter_max REAL NOT NULL,
+    FOREIGN KEY (neo_id) REFERENCES asteroids(neo_id) ON DELETE CASCADE,
+    UNIQUE(neo_id, unit)
+);
+CREATE INDEX IF NOT EXISTS idx_diameter_neo_id ON estimated_diameters(neo_id);
+CREATE TABLE IF NOT EXISTS close_approaches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    neo_id TEXT NOT NULL,
+    close_approach_date DATE NOT NULL,
+    close_approach_date_full TEXT,
+    epoch_date_close_approach BIGINT,
+    -- Relative velocity
+    velocity_km_per_sec REAL,
+    velocity_km_per_hour REAL,
+    velocity_miles_per_hour REAL,
+    -- Miss distance
+    miss_distance_astronomical REAL,
+    miss_distance_lunar REAL,
+    miss_distance_km REAL,
+    miss_distance_miles REAL,
+    orbiting_body TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (neo_id) REFERENCES asteroids(neo_id) ON DELETE CASCADE,
+    UNIQUE(neo_id, close_approach_date, orbiting_body)
+);
+CREATE INDEX IF NOT EXISTS idx_close_approach_date ON close_approaches(close_approach_date);
+CREATE INDEX IF NOT EXISTS idx_close_approach_neo_id ON close_approaches(neo_id);
+CREATE INDEX IF NOT EXISTS idx_orbiting_body ON close_approaches(orbiting_body);
+CREATE TABLE IF NOT EXISTS api_metadata (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    api_endpoint TEXT NOT NULL,
+    element_count INTEGER,
+    extraction_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status TEXT CHECK(status IN ('success', 'partial', 'failed')) DEFAULT 'success',
+    error_message TEXT,
+    UNIQUE(start_date, end_date, api_endpoint)
+);
+CREATE INDEX IF NOT EXISTS idx_api_metadata_dates ON api_metadata(start_date, end_date);
+CREATE TABLE IF NOT EXISTS raw_data_archive (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    raw_json TEXT NOT NULL,
+    file_path TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE VIEW IF NOT EXISTS v_asteroid_close_approaches AS
+SELECT 
+    a.neo_id,
+    a.name,
+    a.absolute_magnitude_h,
+    a.is_potentially_hazardous,
+    ca.close_approach_date,
+    ca.miss_distance_km,
+    ca.velocity_km_per_hour,
+    ca.orbiting_body
+FROM asteroids a
+JOIN close_approaches ca ON a.neo_id = ca.neo_id;
+CREATE VIEW IF NOT EXISTS v_hazardous_asteroids AS
+SELECT 
+    a.neo_id,
+    a.name,
+    a.absolute_magnitude_h,
+    MIN(ca.miss_distance_km) as closest_miss_distance_km,
+    ca.close_approach_date as closest_approach_date
+FROM asteroids a
+JOIN close_approaches ca ON a.neo_id = ca.neo_id
+WHERE a.is_potentially_hazardous = 1
+GROUP BY a.neo_id, a.name, a.absolute_magnitude_h, ca.close_approach_date;
+```
+
+The database\ddl\__init__.py is:
+```python
+"""
+Database package - handles database connections and schema management
+"""
+from .connection import DatabaseManager, get_db_manager
+from .schema import SchemaManager, initialize_database
+__all__ = ['DatabaseManager', 'get_db_manager', 'SchemaManager', 'initialize_database']
+```
+
+the connection.py:
+```python
+class DatabaseManager:
+    """
+    Manages SQLite database connections and operations.
+    Implements singleton pattern to ensure single connection pool.
+    """
+    _instance = None
+    def __new__(cls, db_path: str = "data/nasa_neo.db"):
+        """Singleton implementation"""
+    def __init__(self, db_path: str = "data/nasa_neo.db"):
+        """
+        Initialize database manager
+        Args:
+            db_path: Path to SQLite database file
+        """
+    def get_connection(self) -> sqlite3.Connection:
+        """
+        Get or create database connection
+        Returns:
+            sqlite3.Connection: Active database connection
+        """
+    def close_connection(self):
+        """Close the database connection"""
+    @contextmanager
+    def transaction(self):
+        """
+        Context manager for database transactions
+        Automatically commits on success, rolls back on error
+        Usage:
+            with db_manager.transaction():
+                cursor.execute("INSERT ...")
+        """
+    @contextmanager
+    def cursor(self):
+        """
+        Context manager for database cursor
+        Usage:
+            with db_manager.cursor() as cur:
+                cur.execute("SELECT ...")
+        """
+    def execute_query(
+        self, 
+        query: str, 
+        params: Optional[Tuple] = None,
+        fetch: bool = False
+    ) -> Optional[List[sqlite3.Row]]:
+        """
+        Execute a single query
+        Args:
+            query: SQL query string
+            params: Query parameters
+            fetch: Whether to fetch results
+        Returns:
+            Query results if fetch=True, None otherwise
+        """
+        with self.cursor() as cur:
+            cur.execute(query, params or ())
+            if fetch:
+                return cur.fetchall()
+            self.get_connection().commit()
+            return None
+    def execute_many(self, query: str, params_list: List[Tuple]):
+        """
+        Execute query with multiple parameter sets (batch insert)
+        Args:
+            query: SQL query string
+            params_list: List of parameter tuples
+        """
+    def execute_script(self, script: str):
+        """
+        Execute a SQL script (multiple statements)
+        Args:
+            script: SQL script string
+        """
+    def table_exists(self, table_name: str) -> bool:
+        """
+        Check if a table exists in the database
+        Args:
+            table_name: Name of the table
+        Returns:
+            True if table exists, False otherwise
+        """
+    def get_table_info(self, table_name: str) -> List[sqlite3.Row]:
+        """
+        Get table schema information
+        Args:
+            table_name: Name of the table
+        Returns:
+            List of column information
+        """
+    def count_rows(self, table_name: str) -> int:
+        """
+        Count rows in a table
+        Args:
+            table_name: Name of the table
+        Returns:
+            Number of rows
+        """
+# Convenience function for getting database manager instance
+def get_db_manager(db_path: str = "data/nasa_neo.db") -> DatabaseManager:
+    """
+    Get DatabaseManager instance
+    Args:
+        db_path: Path to database file
+    Returns:
+        DatabaseManager instance
+    """
+```
+
+The schema.py
+```python
+class SchemaManager:
+    """Manages database schema creation and updates"""
+    def __init__(self, db_manager: Optional[DatabaseManager] = None):
+        """
+        Initialize SchemaManager
+        Args:
+            db_manager: DatabaseManager instance (creates new if None)
+        """  
+    def initialize_schema(self, force: bool = False):
+        """
+        Initialize database schema from DDL scripts
+        Args:
+            force: If True, drop existing tables before creating
+        """
+    def _drop_all_tables(self):
+        """Drop all tables in the database"""
+    def _verify_schema(self):
+        """Verify that all expected tables exist"""
+    def get_schema_stats(self) -> dict:
+        """
+        Get statistics about the database schema
+        Returns:
+            Dictionary with table names and row counts
+        """
+    def print_schema_info(self):
+        """Print detailed schema information"""
+def initialize_database(db_path: str = "data/nasa_neo.db", force: bool = False):
+    """
+    Convenience function to initialize database
+    Args:
+        db_path: Path to database file
+        force: If True, recreate all tables
+    """
+if __name__ == "__main__":
+    # Setup logging for standalone execution
+    # Initialize database
+    # Print schema information
+    # Print statistics
+```
+
+Now I will move to next phase, Phase 3: Data Transformation & Quality
+What I want to build
+Transformation Pipeline (Silver Layer)
+I may create directory like:
+```
+transformers/
+├── __init__.py
+├── base_transformer.py
+├── neo_transformer.py
+└── data_quality.py
+```
+
+This is just the simple idea in my head. You may add your touch to it.
+
+Here is what I think we can do:
+- Parse nested JSON structures
+- Convert data types (dates, numbers)
+- Handle missing values
+- Standardize units (km to AU, etc.)
+- Calculate derived metrics (velocity in different units)
+- Create dimension tables (lookup tables for asteroid names)
+Implement data quality checks:
+- Null checks
+- Range validation
+- Duplicate detection
+- Schema validation
+
+This is also the idea in my head, so you may need to refine it or add your touch.
+
+Can you help me in it tell me the steps explained simply and also the code and everything.
+I need to put it together in my project.
