@@ -2,6 +2,7 @@
 NEO Data Loader
 Loads JSON data from raw files into SQLite database
 Implements incremental loading to avoid duplicates
+Enhanced to support both raw and transformed data
 """
 
 ##########################################################################################
@@ -170,10 +171,87 @@ class NEOLoader:
         # Log summary
         logger.info(f"Loading complete: {stats}")
         return stats
+
+##########################################################################################
+    def load_transformed_data(self, transformed_data: Dict, source_file: str = "transformed") -> Dict:
+        """
+        Load data from transformed/validated format
+        This is an alternative loading method for pre-transformed data
+        
+        Args:
+            transformed_data: Dictionary from NEOTransformer with structure:
+                {
+                    'asteroids': [...],
+                    'estimated_diameters': [...],
+                    'close_approaches': [...],
+                    'metadata': {...}
+                }
+            source_file: Source identifier for tracking
+            
+        Returns:
+            Dictionary with loading statistics
+        """
+        logger.info("Loading from transformed data format")
+        
+        stats = {
+            'asteroids_inserted': 0,
+            'asteroids_updated': 0,
+            'close_approaches_inserted': 0,
+            'diameters_inserted': 0,
+            'errors': []
+        }
+        
+        try:
+            with self.db_manager.transaction():
+                # Load asteroids
+                for asteroid in transformed_data['asteroids']:
+                    try:
+                        result = self._insert_transformed_asteroid(asteroid)
+                        stats['asteroids_inserted'] += result['inserted']
+                        stats['asteroids_updated'] += result['updated']
+                    except Exception as e:
+                        logger.error(f"Error loading asteroid {asteroid.get('neo_id')}: {e}")
+                        stats['errors'].append(str(e))
+                
+                # Load diameters
+                for diameter in transformed_data['estimated_diameters']:
+                    try:
+                        self._insert_transformed_diameter(diameter)
+                        stats['diameters_inserted'] += 1
+                    except Exception as e:
+                        logger.error(f"Error loading diameter: {e}")
+                        stats['errors'].append(str(e))
+                
+                # Load close approaches
+                for approach in transformed_data['close_approaches']:
+                    try:
+                        self._insert_transformed_approach(approach)
+                        stats['close_approaches_inserted'] += 1
+                    except Exception as e:
+                        logger.error(f"Error loading approach: {e}")
+                        stats['errors'].append(str(e))
+                
+                # Load metadata
+                metadata = transformed_data.get('metadata', {})
+                if metadata:
+                    self._insert_api_metadata(
+                        metadata['start_date'],
+                        metadata['end_date'],
+                        metadata['element_count'],
+                        source_file
+                    )
+        
+        except Exception as e:
+            logger.error(f"Transaction failed: {e}")
+            stats['errors'].append(str(e))
+            raise
+        
+        logger.info(f"Transformed data loading complete: {stats}")
+        return stats
     
 ##########################################################################################
     def _insert_asteroid(self, asteroid_data: Dict) -> Dict:
-        """Insert or update asteroid record"""
+        """Insert or update asteroid record from raw format"""
         neo_id = asteroid_data['id']
         
         # Check if asteroid exists
@@ -207,10 +285,49 @@ class NEOLoader:
             'inserted': 0 if existing else 1,
             'updated': 1 if existing else 0
         }
+
+##########################################################################################
+    def _insert_transformed_asteroid(self, asteroid: Dict) -> Dict:
+        """Insert or update asteroid record from transformed format"""
+        neo_id = asteroid['neo_id']
+        
+        # Check if asteroid exists
+        existing = self.db_manager.execute_query(
+            "SELECT neo_id FROM asteroids WHERE neo_id = ?",
+            (neo_id,),
+            fetch=True
+        )
+        
+        query = """
+            INSERT OR REPLACE INTO asteroids (
+                neo_id, neo_reference_id, name, nasa_jpl_url,
+                absolute_magnitude_h, is_potentially_hazardous,
+                is_sentry_object, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        
+        params = (
+            asteroid['neo_id'],
+            asteroid['neo_reference_id'],
+            asteroid['name'],
+            asteroid.get('nasa_jpl_url'),
+            asteroid['absolute_magnitude_h'],
+            asteroid['is_potentially_hazardous'],
+            asteroid['is_sentry_object'],
+            asteroid['created_at'],
+            asteroid['updated_at']
+        )
+        
+        self.db_manager.execute_query(query, params)
+        
+        return {
+            'inserted': 0 if existing else 1,
+            'updated': 1 if existing else 0
+        }
     
 ##########################################################################################
     def _insert_diameters(self, asteroid_data: Dict) -> int:
-        """Insert estimated diameter records"""
+        """Insert estimated diameter records from raw format"""
         neo_id = asteroid_data['id']
         estimated_diameter = asteroid_data.get('estimated_diameter', {})
         
@@ -235,10 +352,28 @@ class NEOLoader:
             count += 1
         
         return count
+
+##########################################################################################
+    def _insert_transformed_diameter(self, diameter: Dict):
+        """Insert diameter record from transformed format"""
+        query = """
+            INSERT OR REPLACE INTO estimated_diameters (
+                neo_id, unit, estimated_diameter_min, estimated_diameter_max
+            ) VALUES (?, ?, ?, ?)
+        """
+        
+        params = (
+            diameter['neo_id'],
+            diameter['unit'],
+            diameter['estimated_diameter_min'],
+            diameter['estimated_diameter_max']
+        )
+        
+        self.db_manager.execute_query(query, params)
     
 ##########################################################################################
     def _insert_close_approaches(self, asteroid_data: Dict) -> int:
-        """Insert close approach records"""
+        """Insert close approach records from raw format"""
         neo_id = asteroid_data['id']
         close_approaches = asteroid_data.get('close_approach_data', [])
         
@@ -278,6 +413,38 @@ class NEOLoader:
             self.db_manager.execute_query(query, params)
         
         return len(close_approaches)
+
+##########################################################################################
+    def _insert_transformed_approach(self, approach: Dict):
+        """Insert close approach record from transformed format"""
+        query = """
+            INSERT OR REPLACE INTO close_approaches (
+                neo_id, close_approach_date, close_approach_date_full,
+                epoch_date_close_approach,
+                velocity_km_per_sec, velocity_km_per_hour, velocity_miles_per_hour,
+                miss_distance_astronomical, miss_distance_lunar,
+                miss_distance_km, miss_distance_miles,
+                orbiting_body, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        
+        params = (
+            approach['neo_id'],
+            approach['close_approach_date'],
+            approach.get('close_approach_date_full'),
+            approach.get('epoch_date_close_approach'),
+            approach['velocity_km_per_sec'],
+            approach['velocity_km_per_hour'],
+            approach['velocity_miles_per_hour'],
+            approach['miss_distance_astronomical'],
+            approach['miss_distance_lunar'],
+            approach['miss_distance_km'],
+            approach['miss_distance_miles'],
+            approach['orbiting_body'],
+            approach['created_at']
+        )
+        
+        self.db_manager.execute_query(query, params)
     
 ##########################################################################################
     def _insert_api_metadata(

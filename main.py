@@ -10,6 +10,10 @@ from dotenv import load_dotenv
 from extractors.neo_extractor import NEOExtractor
 from database.schema import initialize_database
 from loaders.neo_loader import NEOLoader
+
+# Import new transformation components
+from transformers.neo_transformer import NEOTransformer
+from transformers.data_quality import DataQualityChecker
 ##########################################################################################
 
 def setup_logging(config: dict):
@@ -33,7 +37,7 @@ def load_config(config_path: str = 'config/config.yaml') -> dict:
         return yaml.safe_load(f)
 
 ##########################################################################################
-# Raw Data
+# Raw Data (Bronze Layer)
 def save_raw_data(data: dict, base_path: str) -> Path:
     """
     Save raw NASA JSON data into Bronze layer
@@ -73,12 +77,16 @@ def main():
     logger.info("NASA NEO DATA PIPELINE STARTED")
     logger.info("=" * 70)
 
-    # 1: Initialize Database Schema
-    logger.info("[1/4] Initializing database schema...")
+    # ========================================================================
+    # STEP 1: Initialize Database Schema
+    # ========================================================================
+    logger.info("\n[STEP 1/5] Initializing database schema...")
     initialize_database(force=False)
 
-    # 2: Extract Data from NASA API
-    logger.info("[2/4] Extracting NEO data from NASA API...")
+    # ========================================================================
+    # STEP 2: Extract Data from NASA API (Bronze Layer)
+    # ========================================================================
+    logger.info("\n[STEP 2/5] Extracting NEO data from NASA API...")
     extractor = NEOExtractor(
         api_key=api_key,
         base_url=config['api']['base_url'],
@@ -89,37 +97,88 @@ def main():
     )
 
     data = extractor.extract_last_n_days(7)
+    logger.info(f"✓ Extracted {data['element_count']} NEOs")
 
-    logger.info(f"Extracted {data['element_count']} NEOs")
-
-    # 3: Save Raw Data
-    logger.info("[3/4] Saving raw JSON data...")
+    # ========================================================================
+    # STEP 3: Save Raw Data (Bronze Layer)
+    # ========================================================================
+    logger.info("\n[STEP 3/5] Saving raw JSON data (Bronze Layer)...")
     raw_file = save_raw_data(
         data,
         base_path=config['storage']['raw_data_path']
     )
+    logger.info(f"✓ Raw data saved to {raw_file}")
 
-    logger.info(f"Raw data saved to {raw_file}")
+    # ========================================================================
+    # STEP 4: Transform & Validate Data (Silver Layer) - NEW!
+    # ========================================================================
+    logger.info("\n[STEP 4/5] Transforming and validating data (Silver Layer)...")
+    
+    # Initialize quality checker
+    quality_checker = DataQualityChecker()
+    
+    # Initialize transformer
+    transformer = NEOTransformer(quality_checker=quality_checker)
+    
+    # Transform the data
+    transformed_data = transformer.transform(data)
+    
+    logger.info(f"✓ Transformed {len(transformed_data['asteroids'])} asteroids")
+    logger.info(f"✓ Transformed {len(transformed_data['estimated_diameters'])} diameter records")
+    logger.info(f"✓ Transformed {len(transformed_data['close_approaches'])} close approach records")
+    
+    # Get quality summary
+    quality_summary = quality_checker.get_summary()
+    logger.info(f"✓ Quality Check Pass Rate: {quality_summary['pass_rate']:.1f}%")
+    
+    # Save transformed data (Silver Layer)
+    transformer.save_transformed_data(
+        transformed_data,
+        output_dir="data/processed"
+    )
+    logger.info(f"✓ Transformed data saved to data/processed/")
+    
+    # Log quality issues if any
+    if quality_summary['failed'] > 0:
+        logger.warning(f"⚠ Found {quality_summary['failed']} quality issues")
+        logger.warning("Check data/processed/quality_report_*.json for details")
 
-    # 4: Load into SQLite
-    logger.info("[4/4] Loading data into SQLite database...")
+    # ========================================================================
+    # STEP 5: Load into SQLite Database
+    # ========================================================================
+    logger.info("\n[STEP 5/5] Loading data into SQLite database...")
     loader = NEOLoader()
 
+    # You can choose to load from transformed data or original data
+    # For now, we'll keep using your original loader with raw data
+    # (Option to load transformed data is shown below)
+    
     stats = loader.load_from_json_data(
         data,
         source_file=str(raw_file),
         skip_if_loaded=True
     )
 
-    logger.info("Load completed:")
-    logger.info(f"  Asteroids inserted: {stats['asteroids_inserted']}")
-    logger.info(f"  Asteroids updated: {stats['asteroids_updated']}")
-    logger.info(f"  Close approaches: {stats['close_approaches_inserted']}")
-    logger.info(f"  Diameters inserted: {stats['diameters_inserted']}")
+    logger.info("✓ Load completed:")
+    logger.info(f"  • Asteroids inserted: {stats['asteroids_inserted']}")
+    logger.info(f"  • Asteroids updated: {stats['asteroids_updated']}")
+    logger.info(f"  • Close approaches: {stats['close_approaches_inserted']}")
+    logger.info(f"  • Diameters inserted: {stats['diameters_inserted']}")
 
     if stats['errors']:
-        logger.warning(f"Errors encountered: {len(stats['errors'])}")
+        logger.warning(f"⚠ Errors encountered: {len(stats['errors'])}")
 
+    # ========================================================================
+    # Pipeline Summary
+    # ========================================================================
+    logger.info("\n" + "=" * 70)
+    logger.info("PIPELINE SUMMARY")
+    logger.info("=" * 70)
+    logger.info(f"✓ Extracted: {data['element_count']} NEO objects")
+    logger.info(f"✓ Raw Data: {raw_file}")
+    logger.info(f"✓ Transformed: {len(transformed_data['asteroids'])} records")
+    logger.info(f"✓ Quality Checks: {quality_summary['pass_rate']:.1f}% passed")
+    logger.info(f"✓ Loaded: {stats['asteroids_inserted'] + stats['asteroids_updated']} asteroids to database")
     logger.info("=" * 70)
     logger.info("PIPELINE FINISHED SUCCESSFULLY")
     logger.info("=" * 70)
