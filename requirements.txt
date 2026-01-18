@@ -1,3 +1,12 @@
-python-dotenv
-PyYAML
-requests
+# requirements.txt
+# Core Dependencies
+requests>=2.31.0
+python-dotenv>=1.0.0
+PyYAML>=6.0
+
+# Apache Airflow
+apache-airflow==2.8.1
+apache-airflow-providers-sqlite==3.7.0
+
+# Optional but recommended
+pendulum>=3.0.0  # Better datetime handling
