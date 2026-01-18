@@ -540,7 +540,5 @@ class DataQualityChecker:
         """Validate date string format"""
     def _update_stats(self, results: List[ValidationResult]):
         """Update validation statistics"""
-
-
-
+        
 
