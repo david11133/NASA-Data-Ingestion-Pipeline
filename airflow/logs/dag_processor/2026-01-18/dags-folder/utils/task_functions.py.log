@@ -1,0 +1,1 @@
+{"timestamp":"2026-01-18T10:25:04.057810Z","level":"info","event":"Filling up the DagBag from /home/david/Personal Projects/NASA-Data-Ingestion-Pipeline/dags/utils/task_functions.py","logger":"airflow.models.dagbag.DagBag","filename":"dagbag.py","lineno":593}

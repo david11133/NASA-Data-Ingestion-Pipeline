@@ -1,0 +1,70 @@
+# Airflow DAG Configuration
+dag_defaults:
+  owner: 'david'
+  depends_on_past: False
+  email_on_failure: True
+  email_on_retry: False
+  retries: 3
+  retry_delay_minutes: 5
+  execution_timeout_minutes: 30
+
+# Daily Pipeline Configuration
+daily_pipeline:
+  dag_id: 'nasa_neo_daily_pipeline'
+  description: 'Daily NASA NEO data extraction and loading pipeline'
+  schedule: '0 6 * * *'  # 6 AM every day
+  start_date: '2026-01-18'
+  catchup: False  # Don't run for past dates
+  max_active_runs: 1
+  tags: ['nasa', 'neo', 'daily', 'production']
+  
+  # Task-specific timeouts
+  tasks:
+    extract_data:
+      timeout_minutes: 10
+      retries: 3
+    transform_data:
+      timeout_minutes: 5
+      retries: 2
+    load_data:
+      timeout_minutes: 15
+      retries: 2
+    quality_check:
+      timeout_minutes: 5
+      retries: 1
+
+# Backfill Pipeline Configuration
+backfill_pipeline:
+  dag_id: 'nasa_neo_backfill_pipeline'
+  description: 'Backfill historical NASA NEO data'
+  schedule: null  # Manual trigger only
+  start_date: '2025-01-18'
+  catchup: True  # Run for all dates between start_date and now
+  max_active_runs: 3
+  tags: ['nasa', 'neo', 'backfill', 'historical']
+  
+  # Backfill specific settings
+  days_per_run: 7  # Process 7 days at a time
+  max_date_range_days: 7  # NASA API limit
+
+# Email Notifications
+notifications:
+  email_list:
+    - 'davidnady4yad@gmail.com'
+  
+  failure_subject: '[AIRFLOW ALERT] {{ dag.dag_id }} - Task Failed'
+  success_subject: '[AIRFLOW] {{ dag.dag_id }} - Pipeline Success'
+  
+  include_logs: True
+
+# Quality Check Thresholds
+quality_thresholds:
+  min_records: 1  # Minimum records expected per run
+  max_records: 200  # Maximum records expected per run
+  min_pass_rate: 95.0  # Minimum quality check pass rate (%)
+  
+# Slack Notifications (optional - for future)
+slack:
+  enabled: False
+  webhook_url: ''
+  channel: '#nasa-pipeline-alerts'

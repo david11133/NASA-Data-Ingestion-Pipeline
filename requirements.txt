@@ -3,9 +3,10 @@
 requests>=2.31.0
 python-dotenv>=1.0.0
 PyYAML>=6.0
+graphviz
 
 # Apache Airflow
-apache-airflow==2.8.1
+apache-airflow>=3.0.0
 apache-airflow-providers-sqlite==3.7.0
 
 # Optional but recommended
