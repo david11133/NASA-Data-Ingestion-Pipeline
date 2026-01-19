@@ -22,7 +22,7 @@ from airflow.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator
 
 # Import task functions
-from utils.task_functions import (
+from .utils import (
     extract_neo_data,
     transform_neo_data,
     load_to_database,

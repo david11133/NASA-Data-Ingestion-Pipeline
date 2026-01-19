@@ -24,14 +24,14 @@ from airflow.operators.empty import EmptyOperator
 from airflow.utils.task_group import TaskGroup
 
 # Import task functions
-from utils.task_functions import (
+from .utils import (
     check_api_health,
     extract_neo_data,
     transform_neo_data,
     load_to_database,
     run_quality_checks,
     generate_pipeline_report,
-    cleanup_old_files
+    cleanup_old_files,
 )
 
 # Import notification functions
