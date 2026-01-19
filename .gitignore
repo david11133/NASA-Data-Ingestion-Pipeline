@@ -1,3 +1,56 @@
+# Python files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Virtual environments
 venv/
+.venv/
+ENV/
+env/
+
+# Environment / secrets
 .env
-test.py
+.env.*
+
+# Logs
+logs/
+airflow/logs/
+*.log
+
+# Data / databases (raw/processed data, local sqlite files)
+data/
+*.db
+*.sqlite
+nasa_neo.db
+
+# Airflow local/runtime files (ignore generated/local configs & secrets)
+airflow/airflow.cfg
+airflow/simple_auth_manager_passwords.json.generated
+
+# IDEs / editors
+.vscode/
+.idea/
+*.iml
+
+# Tests / coverage / caches / build artifacts
+.pytest_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Notebooks / OS
+.ipynb_checkpoints/
+*.ipynb
+.DS_Store
+Thumbs.db
+
+# Misc
+*.swp
+*.swo
+docker-compose.override.yml
