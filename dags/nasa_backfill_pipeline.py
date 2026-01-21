@@ -97,7 +97,7 @@ def initialize_backfill(**context):
     # Get configuration from DAG run
     conf = context['dag_run'].conf or {}
     
-    start_date = conf.get('start_date', '2025-01-01')
+    start_date = conf.get('start_date', '2026-01-01')
     end_date = conf.get('end_date', datetime.now().strftime('%Y-%m-%d'))
     
     logging.info(f"Backfill date range: {start_date} to {end_date}")
