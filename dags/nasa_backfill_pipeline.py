@@ -1,20 +1,4 @@
-"""
-NASA NEO Backfill Pipeline DAG
-
-This DAG is used to backfill historical NEO data.
-It's designed to run manually (not on a schedule) for specific date ranges.
-
-Usage:
-1. Trigger this DAG manually from Airflow UI
-2. Pass configuration: {"start_date": "2025-01-01", "end_date": "2025-12-31"}
-
-Features:
-- Processes data in weekly chunks (NASA API limit is 7 days)
-- Handles rate limiting
-- Skips already loaded data
-- Generates backfill summary report
-"""
-
+###############################################################################
 from datetime import datetime, timedelta
 from pathlib import Path
 import os
@@ -29,7 +13,6 @@ from airflow.models import Variable
 from airflow.exceptions import AirflowException
 from airflow.utils.dates import days_ago
 
-# Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -38,10 +21,28 @@ from transformers.neo_transformer import NEOTransformer
 from transformers.data_quality import DataQualityChecker
 from loaders.neo_loader import NEOLoader
 from database.schema import initialize_database
+###############################################################################
 
-# =============================================================================
+"""
+NASA NEO Backfill Pipeline DAG
+
+This DAG is used to backfill historical NEO data.
+It's designed to run manually (not on a schedule) for specific date ranges.
+
+Usage:
+1. Trigger this DAG manually from Airflow UI
+2. Pass configuration: e.g., {"start_date": "2025-01-01", "end_date": "2025-12-31"}
+
+Features:
+- Processes data in weekly chunks (NASA API limit is 7 days)
+- Handles rate limiting
+- Skips already loaded data
+- Generates backfill summary report
+"""
+
+###############################################################################
 # Configuration
-# =============================================================================
+###############################################################################
 
 default_args = {
     'owner': 'david',
@@ -96,13 +97,11 @@ def initialize_backfill(**context):
     # Get configuration from DAG run
     conf = context['dag_run'].conf or {}
     
-    # Get date range from config or use defaults
     start_date = conf.get('start_date', '2025-01-01')
     end_date = conf.get('end_date', datetime.now().strftime('%Y-%m-%d'))
     
     logging.info(f"Backfill date range: {start_date} to {end_date}")
     
-    # Validate dates
     try:
         start = datetime.strptime(start_date, '%Y-%m-%d')
         end = datetime.strptime(end_date, '%Y-%m-%d')
@@ -127,8 +126,7 @@ def initialize_backfill(**context):
     ti.xcom_push(key='end_date', value=end_date)
     ti.xcom_push(key='date_chunks', value=chunks)
     ti.xcom_push(key='total_chunks', value=len(chunks))
-    
-    # Initialize database
+
     initialize_database(force=False)
     
     return {
@@ -151,7 +149,7 @@ def process_date_chunk(**context):
     if not chunks:
         raise AirflowException("No date chunks found")
     
-    # Track overall stats
+    # Track stats
     all_stats = {
         'chunks_processed': 0,
         'chunks_failed': 0,
@@ -160,8 +158,7 @@ def process_date_chunk(**context):
         'total_updated': 0,
         'errors': []
     }
-    
-    # Get API key
+
     api_key = os.getenv('NASA_API_KEY')
     if not api_key:
         api_key = Variable.get('NASA_API_KEY')
@@ -326,9 +323,9 @@ def generate_backfill_report(**context):
     return report
 
 
-# =============================================================================
+###############################################################################
 # DAG Definition
-# =============================================================================
+###############################################################################
 
 dag = DAG(
     dag_id='nasa_neo_backfill_pipeline',
@@ -341,9 +338,9 @@ dag = DAG(
     tags=['nasa', 'neo', 'backfill', 'manual'],
 )
 
-# =============================================================================
+###############################################################################
 # Tasks
-# =============================================================================
+###############################################################################
 
 # Task 1: Initialize and validate backfill parameters
 init_task = PythonOperator(
@@ -366,8 +363,8 @@ report_task = PythonOperator(
     dag=dag,
 )
 
-# =============================================================================
+###############################################################################
 # Dependencies
-# =============================================================================
+###############################################################################
 
 init_task >> process_task >> report_task

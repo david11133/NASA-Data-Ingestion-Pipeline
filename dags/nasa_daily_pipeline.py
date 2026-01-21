@@ -1,18 +1,4 @@
-"""
-NASA NEO Daily Data Pipeline DAG
-
-This DAG runs daily to:
-1. Check if NASA API is available
-2. Extract NEO data from NASA API
-3. Save raw data (Bronze layer)
-4. Transform and validate data (Silver layer)
-5. Load data into SQLite database
-6. Run quality checks
-7. Generate daily report
-
-Schedule: Daily at 6:00 AM UTC
-"""
-
+###############################################################################s
 from datetime import datetime, timedelta
 from pathlib import Path
 import os
@@ -28,41 +14,52 @@ from airflow.utils.dates import days_ago
 from airflow.models import Variable
 from airflow.exceptions import AirflowException
 
-# Add your project root to Python path so we can import your modules
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-# Import your existing modules
 from extractors.neo_extractor import NEOExtractor
 from transformers.neo_transformer import NEOTransformer
 from transformers.data_quality import DataQualityChecker
 from loaders.neo_loader import NEOLoader
 from database.schema import initialize_database
+###############################################################################
 
-# =============================================================================
-# DAG Configuration
-# =============================================================================
+"""
+NASA NEO Daily Data Pipeline DAG
 
-# Default arguments for all tasks in this DAG
+This DAG runs daily to:
+1. Check if NASA API is available
+2. Extract NEO data from NASA API
+3. Save raw data (Bronze layer)
+4. Transform and validate data (Silver layer)
+5. Load data into SQLite database
+6. Run quality checks
+7. Generate daily report
+
+Schedule: Daily at 6:00 AM UTC
+"""
+
+###############################################################################
+# DAG Configuration 
+###############################################################################
 default_args = {
     'owner': 'david',
-    'depends_on_past': False,  # Don't depend on previous runs
-    'email': ['davidnady4yad@gmail.com'],  # Change this to your email
+    'depends_on_past': False, 
+    'email': ['davidnady4yad@gmail.com'],
     'email_on_failure': True,
     'email_on_retry': False,
-    'retries': 3,  # Retry failed tasks 3 times
-    'retry_delay': timedelta(minutes=5),  # Wait 5 minutes between retries
-    'execution_timeout': timedelta(minutes=30),  # Kill task if it runs > 30 min
+    'retries': 3,
+    'retry_delay': timedelta(minutes=5),
+    'execution_timeout': timedelta(minutes=30),
 }
 
-# =============================================================================
+###############################################################################
 # Helper Functions (Tasks)
-# =============================================================================
+###############################################################################
 
 def check_api_availability(**context):
     """
     Check if NASA API is reachable before starting the pipeline.
-    This is a sensor task - it will keep checking until API is available.
     """
     import requests
     
@@ -74,7 +71,6 @@ def check_api_availability(**context):
         raise AirflowException("NASA_API_KEY not found in environment or Airflow Variables")
     
     try:
-        # Simple health check - get today's data
         url = "https://api.nasa.gov/neo/rest/v1/feed"
         params = {
             'api_key': api_key,
@@ -111,13 +107,11 @@ def extract_neo_data(**context):
     Pushes the extracted data to XCom for next tasks.
     """
     logging.info("Starting NEO data extraction...")
-    
-    # Get API key
+
     api_key = os.getenv('NASA_API_KEY')
     if not api_key:
         api_key = Variable.get('NASA_API_KEY')
-    
-    # Initialize extractor
+
     extractor = NEOExtractor(
         api_key=api_key,
         base_url="https://api.nasa.gov/neo/rest/v1",
@@ -126,14 +120,13 @@ def extract_neo_data(**context):
         max_retries=3,
         retry_delay=2
     )
-    
-    # Extract data
+
     data = extractor.extract_last_n_days(7)
     
     logging.info(f"✓ Extracted {data['element_count']} NEO objects")
     
     # Push data to XCom (Airflow's way of passing data between tasks)
-    # We'll save the file path instead of the entire data (more efficient)
+    # We will save the file path instead of the entire data (more efficient)
     raw_file_path = context['task_instance'].xcom_push(
         key='neo_data_count',
         value=data['element_count']
@@ -145,7 +138,7 @@ def extract_neo_data(**context):
         value=datetime.now().isoformat()
     )
     
-    return data  # This gets stored in XCom automatically as return value
+    return data
 
 
 def save_raw_data(**context):
@@ -189,8 +182,7 @@ def transform_and_validate(**context):
     Transform raw data to Silver layer and run quality checks.
     """
     logging.info("Starting data transformation and validation...")
-    
-    # Pull data from extraction task
+
     ti = context['task_instance']
     data = ti.xcom_pull(task_ids='extract_neo_data')
     
@@ -200,8 +192,7 @@ def transform_and_validate(**context):
     # Initialize quality checker and transformer
     quality_checker = DataQualityChecker()
     transformer = NEOTransformer(quality_checker=quality_checker)
-    
-    # Transform the data
+
     transformed_data = transformer.transform(data)
     
     logging.info(f"✓ Transformed {len(transformed_data['asteroids'])} asteroids")
@@ -267,7 +258,7 @@ def load_to_database(**context):
     if stats['errors']:
         logging.warning(f"⚠ Errors encountered: {len(stats['errors'])}")
         # Don't fail the task, but log errors
-        for error in stats['errors'][:5]:  # Show first 5 errors
+        for error in stats['errors'][:5]:
             logging.error(f"  - {error}")
     
     return stats
@@ -324,33 +315,33 @@ def generate_daily_report(**context):
     return report
 
 
-# =============================================================================
+###############################################################################
 # DAG Definition
-# =============================================================================
+###############################################################################
 
 # Create the DAG
 dag = DAG(
     dag_id='nasa_neo_daily_pipeline',
     default_args=default_args,
     description='Daily NASA NEO data ingestion pipeline',
-    schedule_interval='0 6 * * *',  # Run daily at 6:00 AM UTC (Cron expression)
-    start_date=datetime(2026, 1, 1),  # Start from Jan 1, 2026
-    catchup=False,  # Don't run for past dates
-    max_active_runs=1,  # Only one run at a time
+    schedule_interval='0 6 * * *', 
+    start_date=datetime(2026, 1, 1), 
+    catchup=False,
+    max_active_runs=1,
     tags=['nasa', 'neo', 'daily', 'production'],
 )
 
-# =============================================================================
+###############################################################################
 # Task Definitions
-# =============================================================================
+###############################################################################
 
-# Task 1: Check API Availability (Sensor)
+# Task 1: Check API Availability
 api_sensor = PythonSensor(
     task_id='check_api_availability',
     python_callable=check_api_availability,
-    poke_interval=60,  # Check every 60 seconds
-    timeout=600,  # Give up after 10 minutes
-    mode='poke',  # Keep checking until success or timeout
+    poke_interval=60, 
+    timeout=600,  
+    mode='poke', 
     dag=dag,
 )
 
@@ -396,16 +387,13 @@ report = PythonOperator(
     dag=dag,
 )
 
-# =============================================================================
+###############################################################################
 # Task Dependencies (Pipeline Flow)
-# =============================================================================
+###############################################################################
 
-# Define the workflow:
+# The workflow:
 # Check API → Init DB → Extract → Save Raw → Transform → Load → Report
 #                                     ↓
 #                                 (parallel)
 
 api_sensor >> init_db >> extract >> save_raw >> transform >> load_db >> report
-
-# Alternative with parallel paths (if you want to save and transform simultaneously):
-# api_sensor >> init_db >> extract >> [save_raw, transform] >> load_db >> report
