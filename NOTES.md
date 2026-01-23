@@ -560,3 +560,217 @@ class DataQualityChecker:
         """Update validation statistics"""
 ```
 
+Phase 4: Workflow Orchestration (Weeks 7-8)
+What I built:
+1. Setup Apache Airflow
+- Installed Airflow locally
+- Initialized database: airflow db init
+- Created admin user
+- Started web server and scheduler
+2. Created Your First DAG
+```
+dags/
+├── nasa_daily_pipeline.py
+└── nasa_backfill_pipeline.py
+```
+3. DAG StructureExtract 
+NEO → Store Raw → Transform → Load to DB → Quality Check → Generate Report
+4. Tasks to Complete
+- Created daily scheduled DAG (runs every day at 6 AM)
+- Implemented task dependencies
+- Added retry logic and alerts
+- Created a backfill DAG for historical data
+- Set up email notifications on failure
+- Added sensor for API availability
+
+nasa_daily_pipeline.py:
+```
+"""
+NASA NEO Daily Data Pipeline DAG
+
+This DAG runs daily to:
+1. Check if NASA API is available
+2. Extract NEO data from NASA API
+3. Save raw data (Bronze layer)
+4. Transform and validate data (Silver layer)
+5. Load data into SQLite database
+6. Run quality checks
+7. Generate daily report
+
+Schedule: Daily at 6:00 AM UTC
+"""
+default_args = {
+    'owner': 'david',
+    'depends_on_past': False, 
+    'email': ['davidnady4yad@gmail.com'],
+    'email_on_failure': True,
+    'email_on_retry': False,
+    'retries': 3,
+    'retry_delay': timedelta(minutes=5),
+    'execution_timeout': timedelta(minutes=30),
+}
+def check_api_availability(**context):
+    """
+    Check if NASA API is reachable before starting the pipeline.
+    """
+def initialize_database_task(**context):
+    """
+    Initialize database schema if not exists.
+    """
+def extract_neo_data(**context):
+    """
+    Extract NEO data from NASA API for the last 7 days.
+    Pushes the extracted data to XCom for next tasks.
+    """
+def save_raw_data(**context):
+    """
+    Save raw data to Bronze layer (organized by date).
+    """
+def transform_and_validate(**context):
+    """
+    Transform raw data to Silver layer and run quality checks.
+    """
+def load_to_database(**context):
+    """
+    Load transformed data into SQLite database.
+    """
+def generate_daily_report(**context):
+    """
+    Generate a summary report of the daily pipeline run.
+    """
+dag = DAG(
+    dag_id='nasa_neo_daily_pipeline',
+    default_args=default_args,
+    description='Daily NASA NEO data ingestion pipeline',
+    schedule_interval='0 6 * * *', 
+    start_date=datetime(2026, 1, 1), 
+    catchup=False,
+    max_active_runs=1,
+    tags=['nasa', 'neo', 'daily', 'production'],
+)
+api_sensor = PythonSensor(
+    task_id='check_api_availability',
+    python_callable=check_api_availability,
+    poke_interval=60, 
+    timeout=600,  
+    mode='poke', 
+    dag=dag,
+)
+init_db = PythonOperator(
+    task_id='initialize_database',
+    python_callable=initialize_database_task,
+    dag=dag,
+)
+extract = PythonOperator(
+    task_id='extract_neo_data',
+    python_callable=extract_neo_data,
+    dag=dag,
+)
+save_raw = PythonOperator(
+    task_id='save_raw_data',
+    python_callable=save_raw_data,
+    dag=dag,
+)
+transform = PythonOperator(
+    task_id='transform_and_validate',
+    python_callable=transform_and_validate,
+    dag=dag,
+)
+load_db = PythonOperator(
+    task_id='load_to_database',
+    python_callable=load_to_database,
+    dag=dag,
+)
+report = PythonOperator(
+    task_id='generate_daily_report',
+    python_callable=generate_daily_report,
+    dag=dag,
+)
+# The workflow:
+# Check API → Init DB → Extract → Save Raw → Transform → Load → Report
+#                                     ↓
+#                                 (parallel)
+
+api_sensor >> init_db >> extract >> save_raw >> transform >> load_db >> report
+```
+
+nasa_backfill_pipeline.py:
+```
+"""
+NASA NEO Backfill Pipeline DAG
+
+This DAG is used to backfill historical NEO data.
+It's designed to run manually (not on a schedule) for specific date ranges.
+
+Usage:
+1. Trigger this DAG manually from Airflow UI
+2. Pass configuration: e.g., {"start_date": "2025-01-01", "end_date": "2025-12-31"}
+
+Features:
+- Processes data in weekly chunks (NASA API limit is 7 days)
+- Handles rate limiting
+- Skips already loaded data
+- Generates backfill summary report
+"""
+default_args = {
+    'owner': 'david',
+    'depends_on_past': False,
+    'email': ['davidnady4yad@gmail.com'],
+    'email_on_failure': True,
+    'email_on_retry': False,
+    'retries': 2,
+    'retry_delay': timedelta(minutes=10),
+    'execution_timeout': timedelta(hours=2),
+}
+def generate_date_chunks(start_date: str, end_date: str, chunk_size: int = 7) -> List[Tuple[str, str]]:
+    """
+    Split date range into chunks (NASA API allows max 7 days per request).
+    
+    Args:
+        start_date: Start date (YYYY-MM-DD)
+        end_date: End date (YYYY-MM-DD)
+        chunk_size: Days per chunk (default 7)
+    
+    Returns:
+        List of (start, end) date tuples
+    """
+def initialize_backfill(**context):
+    """
+    Initialize backfill process and validate parameters.
+    """
+def process_date_chunk(**context):
+    """
+    Process a single date chunk (extract, transform, load).
+    This function will be called multiple times for each chunk.
+    """
+def generate_backfill_report(**context):
+    """
+    Generate comprehensive backfill report.
+    """
+dag = DAG(
+    dag_id='nasa_neo_backfill_pipeline',
+    default_args=default_args,
+    description='Backfill historical NASA NEO data',
+    schedule_interval=None,  # Manual trigger only
+    start_date=datetime(2026, 1, 1),
+    catchup=False,
+    max_active_runs=1,
+    tags=['nasa', 'neo', 'backfill', 'manual'],
+)
+init_task = PythonOperator(
+    task_id='initialize_backfill',
+    python_callable=initialize_backfill,
+    dag=dag,
+)
+process_task = PythonOperator(
+    task_id='process_chunks',
+    python_callable=process_date_chunk,
+    dag=dag,
+)
+report_task = PythonOperator(
+    task_id='generate_backfill_report',
+    python_callable=generate_backfill_report,
+    dag=dag,
+)
+init_task >> process_task >> report_task
+```
