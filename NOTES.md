@@ -10,6 +10,7 @@ Phase 1: Foundation & Data Ingestion (Weeks 1-2)
 Simple API ingestion
 1. Built my first Extractor
 Project Structure:
+```
 nasa-de-project/
 ├── config/
 │ └── config.yaml
@@ -19,10 +20,12 @@ nasa-de-project/
 │ └── neo_extractor.py
 ├── .env
 └── main.py
+```
 
 Let me give you some snipsets from each code
 
 config.yaml:
+```
 api:
   base_url: "https://api.nasa.gov/neo/rest/v1"
   timeout: 30
@@ -34,8 +37,10 @@ logging:
   level: "INFO"
   log_file: "logs/nasa.log"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+```
 
 base_extractor.py:
+```
 class BaseExtractor:
     """
     Handles common functionality like HTTP requests, retries, and error handling.
@@ -72,8 +77,10 @@ class BaseExtractor:
         This method should be overridden by child classes.
         """
         raise NotImplementedError("Subclasses must implement extract() method")
+```
 
 neo_extractor.py:
+```
 class NEOExtractor(BaseExtractor):
     """
     Extractor for NASA Near Earth Objects (NEOs) data.
@@ -143,11 +150,13 @@ class NEOExtractor(BaseExtractor):
             Dictionary containing NEO data
         """
         return self.extract_last_n_days(7)
+```
 
 Phase 2: Data Storage & Organization (Weeks 3-4)
 
 What I Built?
 1. Organize Raw Data
+```
 data/
 ├── raw/
 │ ├── neos/
@@ -156,7 +165,7 @@ data/
 │ │ │ └── 2024-01-02.json
 │ ├── apod/
 │ └── mars_rover/
-
+```
 
 Wrote SQL DDL scripts for table creation
 Created a database connection manager
@@ -165,6 +174,8 @@ Wrote queries to analyze the data
 Implemented incremental loading (don't reload same dates)
 
 The data in json file is like this:
+
+```
 {
   "links": {
     "next": "http://api.nasa.gov/neo/rest/v1/feed?start_date=2026-01-03&end_date=2026-01-09&detailed=false&api_key=9VSPRf91gXNMIqnQ6Qyfd367bsbccVKp4w617pv2",
@@ -223,7 +234,7 @@ The data in json file is like this:
         ],
         "is_sentry_object": false
       },
-
+```
 (This is just a small sample of it - first item only)
 
 
@@ -231,13 +242,16 @@ Phase 3: Data Transformation & Quality (Weeks 5-6)
 
 What I Built?
 1. Created Transformation Script
+```
 transformers/
 ├── __init__.py
 ├── base_transformer.py
 ├── neo_transformer.py
 └── data_quality.py
+```
 
 base_transformer.py
+```
 """
 Base transformer class for data transformations
 """
@@ -354,8 +368,10 @@ class BaseTransformer(ABC):
         """Log transformation statistics"""
     def reset_stats(self):
         """Reset transformation statistics"""
+```
 
 neo_transformer.py
+```
 """
 NEO-specific data transformer
 """
@@ -459,8 +475,10 @@ class NEOTransformer(BaseTransformer):
         Args:
             transformed_data: Transformed data dictionary
             output_dir: Output directory path
+```
 
 data_quality.py
+```
 """
 Data quality validation and checks
 """
@@ -540,5 +558,5 @@ class DataQualityChecker:
         """Validate date string format"""
     def _update_stats(self, results: List[ValidationResult]):
         """Update validation statistics"""
-        
+```
 
