@@ -28,6 +28,8 @@ nasa_neo.db
 # Airflow local/runtime files (ignore generated/local configs & secrets)
 airflow/airflow.cfg
 airflow/simple_auth_manager_passwords.json.generated
+process_task
+report_task
 
 # IDEs / editors
 .vscode/
